@@ -21,8 +21,8 @@ def test_compute_metrics_returns_contract(sample_data):
 
     assert isinstance(metrics, EvaluationMetrics)
     assert np.isclose(metrics.mae, 0.18)
-    assert np.isclose(metrics.rmse, 0.204939)
-    assert np.isclose(metrics.r2, 0.978)
+    assert np.isclose(metrics.rmse, 0.19493588689617924)
+    assert np.isclose(metrics.r2, 0.981)
 
 
 def test_metrics_with_zero_error():

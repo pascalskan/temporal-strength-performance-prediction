@@ -21,7 +21,7 @@ def test_time_aware_split_leakage(synthetic_data):
         synthetic_data, 
         feature_cols=['Feature1'], 
         target_col='Target',
-        test_size=0.3
+        split_ratio=0.7
     )
     
     # Validation constraints
