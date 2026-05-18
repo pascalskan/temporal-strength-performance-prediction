@@ -13,6 +13,7 @@ def raw_data():
         "Tested": ["Yes", "Yes", "No", "Yes"],
         "Age": [25, 30, 28, 35],
         "BodyweightKg": [80, 95, 90, 110],
+        "Sex": ["M", "M", "F", "M"],
     }
     return pd.DataFrame(data)
 
@@ -36,6 +37,7 @@ def test_clean_data(raw_data):
         "Tested",
         "Age",
         "BodyweightKg",
+        "Sex",
     ]
 
     assert list(cleaned_df.columns) == expected_columns
