@@ -1,229 +1,201 @@
-# Powerlifting Performance Prediction Using Machine Learning
+# Temporal Strength Performance Prediction
+
+[![Python CI](https://github.com/pascalskan/temporal-strength-performance-prediction/actions/workflows/ci.yml/badge.svg)](https://github.com/pascalskan/temporal-strength-performance-prediction/actions/workflows/ci.yml)
+
+A research engineering project investigating whether machine learning models provide more reliable forward prediction of competitive strength performance than traditional deterministic estimation methods.
+
+This repository implements a reproducible experimental framework for comparing traditional strength estimation formulas, statistical baselines, and machine learning models under both retrospective and temporally consistent forward evaluation conditions.
+
+---
 
 ## Overview
 
-This project investigates the use of machine learning techniques to predict competitive powerlifting performance using historical athlete competition data obtained from the OpenPowerlifting dataset.
+Predicting athletic performance is a common applied machine learning problem, but evaluation methodology often introduces misleading conclusions.
 
-The research compares traditional strength estimation methods against multiple machine learning approaches, including:
+Traditional strength estimation methods such as **Epley** and **Brzycki** are widely used for estimating performance from known lifting data, while machine learning approaches are frequently reported as outperforming classical methods.
 
-* Linear Regression
-* Random Forest Regression
-* Gradient Boosting Regression
+However, retrospective evaluation frameworks often allow structural leakage, where models effectively reconstruct known outcomes rather than genuinely predict unseen performance.
 
-The project additionally evaluates:
+This project investigates that problem directly.
 
-* retrospective prediction performance
-* forward prediction capability
-* feature engineering effectiveness
-* model stability
-* subgroup behaviour
-* performance across strength levels
+Core question:
 
-The work was completed as part of the CSC3094 Major Project and Dissertation module.
+> Do machine learning models genuinely outperform traditional strength estimation methods when evaluated under realistic forward prediction conditions?
 
 ---
 
-# Project Objectives
+## Key Contributions
 
-The primary objectives of the project were:
+This repository implements:
 
-1. Evaluate whether machine learning models can accurately predict powerlifting totals.
-2. Compare engineered ML models against traditional strength estimation formulas.
-3. Investigate the impact of historical performance features on prediction accuracy.
-4. Assess model generalisation using forward prediction.
-5. Evaluate model robustness, statistical significance, and stability.
+- leakage-aware predictive modelling
+- temporally consistent forward evaluation
+- deterministic traditional baseline implementation
+- statistical baseline comparison
+- machine learning regression pipelines
+- engineered longitudinal athlete feature generation
+- reproducible experiment orchestration
+- automated testing and CI validation
+- structured result analysis
 
----
+Key engineering characteristics:
 
-# Dataset
-
-The project uses the OpenPowerlifting dataset containing competitive powerlifting results.
-
-Dataset features include:
-
-* athlete demographics
-* bodyweight
-* competition dates
-* equipment categories
-* individual lift attempts
-* total competition results
-
-Two equipment categories were analysed:
-
-* Raw
-* Wraps
+- modular `src/` architecture
+- typed contracts / structured interfaces
+- deterministic validation fixtures
+- runtime validation safeguards
+- reproducibility-oriented experiment execution
+- automated CI testing pipeline
 
 ---
 
-# Project Structure
+## Methodology
+
+### Modelling Approaches
+
+Implemented models:
+
+#### Traditional deterministic methods
+- Epley formula
+- Brzycki formula
+
+#### Statistical baseline
+- Linear Regression
+
+#### Machine learning models
+- Linear Regression (engineered features)
+- Random Forest Regression
+- Gradient Boosting Regression
+
+---
+
+### Feature Engineering
+
+The predictive framework incorporates:
+
+**Demographic features**
+- age
+- sex
+- bodyweight
+
+**Historical performance features**
+- previous competition totals
+- rolling means
+- rolling standard deviation
+- progression trends
+- momentum indicators
+
+**Experience features**
+- competition count
+- competition history depth
+- athlete progression metrics
+
+**Consistency features**
+- performance variability
+- coefficient of variation
+
+---
+
+### Evaluation Frameworks
+
+Two evaluation paradigms are implemented.
+
+#### Retrospective Evaluation
+
+Standard modelling approach where training and testing occur within the same temporal context.
+
+Purpose:
+- benchmark comparison
+- conventional ML evaluation
+
+Limitation:
+- vulnerable to reconstruction bias / leakage
+
+---
+
+#### Forward Prediction Evaluation
+
+Temporal split framework where models predict future athlete performance using only historical information.
+
+Purpose:
+- realistic predictive assessment
+- leakage-aware evaluation
+- genuine generalisation testing
+
+This represents the project's core scientific contribution.
+
+---
+
+## Repository Architecture
 
 ```text
-project/
+temporal-strength-performance-prediction/
 │
-├── data/
-│   └── openpowerlifting.csv
-│
-├── results/
-│   ├── raw/
-│   └── wraps/
+├── .github/
+│   └── workflows/
+│       └── ci.yml
 │
 ├── src/
-│   ├── preprocessing/
-│   ├── models/
+│   ├── analysis/
+│   ├── config/
+│   ├── contracts/
+│   ├── core/
+│   ├── data/
 │   ├── evaluation/
+│   ├── features/
+│   ├── io/
+│   ├── models/
 │   ├── pipelines/
+│   ├── reproducibility/
 │   └── utils/
+│
+├── tests/
+│
+├── validation/
 │
 ├── main.py
 ├── run_all.py
-├── README.md
 ├── requirements.txt
+└── README.md
 ```
 
 ---
 
-# Methodology
+## Installation
 
-## Data Preprocessing
-
-The preprocessing stage included:
-
-* missing value removal
-* competition filtering
-* equipment filtering
-* athlete history construction
-* chronological sorting
-* leakage prevention
-
-A time-aware train/test split was used throughout the project to prevent future information leakage.
-
----
-
-## Feature Engineering
-
-Several engineered features were developed to improve predictive performance, including:
-
-### Historical Features
-
-* Previous competition total
-* Rolling mean
-* Rolling standard deviation
-* Personal best progression
-
-### Progression Features
-
-* Improvement rate
-* Momentum
-
-### Experience Features
-
-* Competition count
-* Career length
-* Experience density
-
-### Consistency Features
-
-* Coefficient of variation
-
-### Athlete Features
-
-* Age
-* Age squared
-* Bodyweight
-* Sex
-
----
-
-# Models
-
-## Traditional Methods
-
-* Epley Formula
-* Brzycki Formula
-
-## Baseline Model
-
-* Linear Regression using basic demographic features
-
-## Machine Learning Models
-
-* Linear Regression (engineered features)
-* Random Forest Regression
-* Gradient Boosting Regression
-
-Hyperparameter tuning was performed using GridSearchCV.
-
----
-
-# Evaluation
-
-Models were evaluated using:
-
-* MAE (Mean Absolute Error)
-* RMSE (Root Mean Squared Error)
-* R² Score
-
-Additional evaluation included:
-
-* cross-validation
-* confidence intervals
-* paired t-tests
-* effect size analysis
-* subgroup analysis
-* strength-level analysis
-* forward prediction evaluation
-* feature importance analysis
-* residual analysis
-
----
-
-# Forward Prediction
-
-The project implemented a forward prediction pipeline designed to predict an athlete’s next competition performance using only historical data available prior to the prediction date.
-
-This provided a more realistic evaluation of real-world predictive capability.
-
----
-
-# Reproducibility
-
-A global random seed was used throughout the project to improve reproducibility.
-
-```python
-np.random.seed(42)
-```
-
-The project also uses:
-
-* time-aware splitting
-* deterministic preprocessing
-* fixed hyperparameter search spaces
-
----
-
-# Continuous Integration
-
-This project uses GitHub Actions for continuous integration. The CI pipeline automatically validates the engineering integrity of the codebase on every push and pull request to the `main` branch.
-
-The workflow performs the following checks:
-1.  **Dependency Installation**: Installs all project dependencies from `requirements.txt`.
-2.  **Code Compilation**: Verifies that all Python source files compile successfully.
-3.  **Automated Testing**: Runs the full `pytest` suite to check for regressions in contracts, metrics, and data handling logic.
-4.  **Import Validation**: Confirms that all core library modules are importable.
-
-This automated process ensures that the software remains robust and supports the scientific reproducibility of the research by guarding against accidental breakages.
-
----
-
-# Running the Project
-
-## Install Dependencies
+Clone repository:
 
 ```bash
+git clone https://github.com/pascalskan/temporal-strength-performance-prediction.git
+cd temporal-strength-performance-prediction
+```
+
+Create virtual environment:
+
+### Windows
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+```
+
+### macOS / Linux
+```bash
+python -m venv .venv
+source .venv/bin/activate
+```
+
+Install dependencies:
+
+```bash
+pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-## Run Full Experiment Pipeline
+---
+
+## Quick Start
+
+Run full experimental pipeline:
 
 ```bash
 python run_all.py
@@ -231,67 +203,154 @@ python run_all.py
 
 This executes:
 
-1. retrospective modelling
-2. forward prediction pipeline
-3. statistical evaluation
-4. analysis plot generation
+- preprocessing
+- feature engineering
+- retrospective evaluation
+- forward prediction evaluation
+- statistical comparison
+- analysis generation
+- result export
 
 ---
 
-# Key Outputs
+## Testing
 
-Generated outputs include:
+Run test suite:
 
-* model evaluation tables
-* feature importance plots
-* residual plots
-* subgroup analysis
-* forward prediction metrics
-* stability analysis
-* comparison visualisations
+```bash
+pytest
+```
 
-Outputs are stored inside:
+Compile validation:
 
-```text
-results/
+```bash
+python -m compileall src main.py
+```
+
+Import smoke validation:
+
+```bash
+python -c "import src.analysis; import src.config; import src.contracts; import src.core; import src.data; import src.evaluation; import src.features; import src.io; import src.models; import src.pipelines; import src.reproducibility; import src.utils"
 ```
 
 ---
 
-# Technologies Used
+## Continuous Integration
 
-* Python
-* Pandas
-* NumPy
-* Scikit-learn
-* Matplotlib
-* SciPy
-* tqdm
+GitHub Actions CI automatically validates:
 
----
+- dependency installation
+- Python compilation
+- automated tests
+- core module imports
 
-# Dissertation Context
+Triggered on:
 
-This repository accompanies the dissertation:
+- push to `main`
+- pull requests
 
-> "Powerlifting Performance Prediction Using Machine Learning"
-
-submitted for:
-
-* CSC3094 Major Project and Dissertation
-* Newcastle University
+This helps preserve engineering integrity and reproducibility.
 
 ---
 
-# Ethical Considerations
+## Dataset
 
-The project used publicly available competition data and did not involve direct human participation, intervention, or collection of sensitive personal information beyond publicly accessible records.
+This project uses competition data derived from the **OpenPowerlifting** dataset.
+
+Tracked repository contents intentionally exclude:
+
+- raw full datasets
+- generated experiment outputs
+- cached artifacts
+- local virtual environments
+
+This keeps the repository lightweight, reproducible, and version-control appropriate.
 
 ---
 
-# Author
+## Reproducibility
 
-**Pascal Skannavis**
+Reproducibility considerations include:
 
-Newcastle University
-CSC3094 Major Project and Dissertation
+- deterministic validation fixtures
+- controlled preprocessing
+- leakage-aware temporal splitting
+- consistent evaluation metrics
+- CI-backed validation
+
+Note:
+
+Full experimental reproducibility depends on access to the same source dataset and environment dependencies.
+
+---
+
+## Key Findings
+
+Core findings from the research:
+
+- traditional deterministic methods perform extremely well under retrospective evaluation
+- this performance is largely attributable to structural reconstruction rather than genuine prediction
+- machine learning models show stronger forward predictive robustness
+- feature engineering contributes more to predictive performance than model complexity
+- temporal evaluation methodology fundamentally changes model rankings
+
+This demonstrates that evaluation design is a critical component of predictive modelling.
+
+---
+
+## Limitations
+
+Current limitations include:
+
+- dependence on competition-level public data
+- absence of physiological / training load variables
+- short-horizon forward prediction
+- limited subgroup balance
+- classical ML focus (no deep sequence modelling)
+
+Future extensions could include:
+
+- recurrent neural networks
+- transformer-based temporal modelling
+- uncertainty-aware prediction
+- richer athlete context features
+
+---
+
+## Research Context
+
+This repository originated from an undergraduate dissertation research project investigating predictive modelling in competitive strength performance.
+
+Its current form has been engineered as a reproducible research software artifact.
+
+---
+
+## Citation
+
+If this repository contributes to academic or applied work, citation guidance will be provided via `CITATION.cff`.
+
+---
+
+## License
+
+License to be added.
+
+Recommended: MIT License.
+
+---
+
+## Author
+
+**Pascal Skannavis**  
+Machine Learning / Software Engineering
+
+---
+
+## Repository Purpose
+
+This repository serves as:
+
+- research engineering portfolio work
+- reproducible ML experimentation artifact
+- predictive modelling case study
+- temporal evaluation methodology demonstration
