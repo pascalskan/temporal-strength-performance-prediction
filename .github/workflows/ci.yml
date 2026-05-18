@@ -1,0 +1,37 @@
+name: Python CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        pip install pytest
+        
+    - name: Check all files compile
+      run: |
+        python -m compileall src main.py
+        
+    - name: Run tests
+      run: |
+        pytest
+        
+    - name: Import smoke test
+      run: |
+        python -c "import src.analysis; import src.config; import src.contracts; import src.core; import src.data; import src.evaluation; import src.features; import src.io; import src.models; import src.pipelines; import src.reproducibility; import src.utils; print('Core library imports OK')"

@@ -1,0 +1,95 @@
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+
+# Build / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Testing / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# =========================
+# Virtual environments
+# =========================
+venv/
+.venv/
+env/
+ENV/
+
+# =========================
+# IDE / editors
+# =========================
+.idea/
+.vscode/
+*.iml
+
+# =========================
+# OS files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Local config / secrets
+# =========================
+.env
+.env.*
+*.local
+
+# =========================
+# Project data
+# =========================
+data/openpowerlifting.csv
+data/raw/
+data/processed/
+data/interim/
+
+# Keep deterministic fixture
+!data/test_fixture.csv
+
+# =========================
+# Generated outputs
+# =========================
+results/
+outputs/
+reports/generated/
+plots/
+figures/generated/
+artifacts/
+
+# =========================
+# Logs
+# =========================
+logs/
+*.log
+
+# =========================
+# Jupyter
+# =========================
+.ipynb_checkpoints/
+
+# =========================
+# Python cache
+# =========================
+**/__pycache__/
+
+# =========================
+# Misc
+# =========================
+*.tmp
+*.bak
+
+# Academic documents
+docs/source_material/*.pdf
