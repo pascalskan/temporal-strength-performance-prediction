@@ -3,12 +3,19 @@ import numpy as np
 from src.config.features import ATTEMPT_COLUMNS
 
 
+VALID_EQUIPMENT = {
+    "Raw",
+    "Wraps"
+}
+
+
 def clean_data(df):
     """
     Clean raw OpenPowerlifting dataset for modelling.
 
     Steps:
     - Remove rows missing core required values
+    - Restrict dataset to supported equipment classes
     - Encode sex as numeric
     - Replace invalid attempt values (<= 0) with NaN
     """
@@ -22,7 +29,10 @@ def clean_data(df):
         ]
     ).copy()
 
-    # Encode Sex
+    # Restrict to supported equipment categories
+    df = df[df["Equipment"].isin(VALID_EQUIPMENT)].copy()
+
+    # Encode sex
     df["Sex"] = df["Sex"].map({
         "M": 1,
         "F": 0
