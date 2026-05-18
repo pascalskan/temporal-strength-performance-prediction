@@ -1,7 +1,7 @@
 import platform
 import sys
 import subprocess
-from datetime import datetime
+from datetime import datetime, UTC
 import importlib.metadata
 import pandas as pd
 from typing import Optional, Dict
@@ -46,7 +46,7 @@ def capture_experiment_metadata(
 ) -> ExperimentMetadata:
     """Generates a full metadata object for the current experiment run."""
     return ExperimentMetadata(
-        timestamp=datetime.utcnow().isoformat() + "Z",
+        timestamp=datetime.now(UTC).isoformat(),
         git_commit=get_git_commit(),
         random_seed=random_seed,
         dataset_name=dataset_name,
