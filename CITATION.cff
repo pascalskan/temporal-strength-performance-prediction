@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+title: "Temporal Strength Performance Prediction"
+message: "If you use this software, please cite it using the metadata below."
+type: software
+
+authors:
+  - family-names: "Skannavis"
+    given-names: "Pascal"
+
+repository-code: "https://github.com/pascalskan/temporal-strength-performance-prediction"
+
+abstract: >
+  A reproducible research engineering project investigating whether machine
+  learning models provide more reliable forward prediction of competitive
+  strength performance than traditional deterministic estimation methods
+  under leakage-aware temporal evaluation.
+
+keywords:
+  - machine learning
+  - predictive modelling
+  - sports analytics
+  - powerlifting
+  - temporal prediction
+  - reproducibility
+  - software engineering
+  - regression
+  - evaluation methodology
+
+license: MIT
