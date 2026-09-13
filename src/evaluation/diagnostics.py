@@ -3,6 +3,7 @@ import numpy as np
 from pathlib import Path
 from sklearn.linear_model import LinearRegression
 import matplotlib.pyplot as plt
+from src.models.utils import get_model_attribute
 
 def compute_diagnostic_metrics(y_true: np.ndarray, y_pred: np.ndarray) -> dict:
     """Computes scalar diagnostics for bias and calibration."""
@@ -18,8 +19,8 @@ def compute_diagnostic_metrics(y_true: np.ndarray, y_pred: np.ndarray) -> dict:
     # Calibration Regression
     lr = LinearRegression()
     lr.fit(y_pred.reshape(-1, 1), y_true)
-    cal_slope = lr.coef_[0]
-    cal_intercept = lr.intercept_
+    cal_slope = get_model_attribute(lr, "coef_")[0]
+    cal_intercept = get_model_attribute(lr, "intercept_")
     
     # Residual Standard Deviation
     residuals = y_true - lr.predict(y_pred.reshape(-1, 1))
