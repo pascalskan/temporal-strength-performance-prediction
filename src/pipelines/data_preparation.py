@@ -57,13 +57,16 @@ def prepare_modelling_data(df):
 
     logger.info("✅ Remaining samples after cleaning: %s", len(df_model))
 
-    X = df_model_no_attempts[ENGINEERED_FEATURES]
-    y = df_model["TotalKg"]
-
     logger.info("🔹 Final feature cleaning (handling remaining NaNs)...")
 
-    X = X.replace([np.inf, -np.inf], np.nan)
-    X = X.fillna(0)
+    # Clean the features directly in the dataframe before splitting
+    for feature in ENGINEERED_FEATURES:
+        if feature in df_model_no_attempts.columns:
+            df_model_no_attempts[feature] = df_model_no_attempts[feature].replace([np.inf, -np.inf], np.nan)
+            df_model_no_attempts[feature] = df_model_no_attempts[feature].fillna(0)
+
+    X = df_model_no_attempts[ENGINEERED_FEATURES]
+    y = df_model["TotalKg"]
 
     logger.info("✅ Final feature cleaning complete")
     logger.info("✅ Features ready: %s features", len(ENGINEERED_FEATURES))
