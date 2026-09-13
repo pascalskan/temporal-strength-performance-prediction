@@ -24,8 +24,15 @@ def test_ci_output_schema(sample_predictions):
     expected_cols = ['model', 'metric', 'point_estimate', 'ci_lower', 'ci_upper', 'std_error']
     assert all(col in results.columns for col in expected_cols)
     
-    # 5 metrics for 2 models
-    assert len(results) == 10 
+    # Naming the metric set explicitly, rather than asserting a bare count, so
+    # that adding or renaming a metric fails here deliberately instead of
+    # silently drifting (sMAPE and NRMSE were previously added without this
+    # assertion being updated).
+    assert set(results['metric']) == {
+        'mae', 'rmse', 'r2', 'median_absolute_error',
+        'mean_residual', 'smape', 'nrmse',
+    }
+    assert len(results) == 7 * results['model'].nunique() == 14
 
 
 def test_ci_deterministic_reproducibility(sample_predictions):
@@ -55,7 +62,8 @@ def test_ci_synthetic_sanity_check():
     results = compute_model_confidence_intervals(df, n_bootstraps=100, random_seed=42)
     
     for _, row in results.iterrows():
-        if row['metric'] in ['mae', 'rmse', 'median_absolute_error', 'mean_residual']:
+        if row['metric'] in ['mae', 'rmse', 'median_absolute_error',
+                             'mean_residual', 'smape', 'nrmse']:
             assert np.isclose(row['point_estimate'], 0)
             assert np.isclose(row['ci_lower'], 0)
             assert np.isclose(row['ci_upper'], 0)
