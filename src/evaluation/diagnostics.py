@@ -6,7 +6,25 @@ import matplotlib.pyplot as plt
 from src.models.utils import get_model_attribute
 
 def compute_diagnostic_metrics(y_true: np.ndarray, y_pred: np.ndarray) -> dict:
-    """Computes scalar diagnostics for bias and calibration."""
+    """
+    Computes scalar diagnostics for bias and calibration.
+
+    Sign conventions -- these differ between the two families of output, and
+    reporting them the wrong way round inverts the direction of bias:
+
+    mean_residual, mean_percentage_bias
+        Computed as (predicted - observed). POSITIVE means the model
+        OVER-predicts. Note this is the opposite of the textbook residual
+        (observed - predicted); it is used here so that "positive bias" reads
+        as "predicts too high".
+
+    calibration_slope, calibration_intercept
+        From the calibration regression of observed on predicted,
+        y_true = intercept + slope * y_pred. A perfectly calibrated model has
+        slope 1 and intercept 0. A model that over-predicts by a constant c
+        yields intercept -c. Slope < 1 indicates predictions that are too
+        extreme at both ends of the range.
+    """
     
     # Mean Residual
     mean_residual = np.mean(y_pred - y_true)

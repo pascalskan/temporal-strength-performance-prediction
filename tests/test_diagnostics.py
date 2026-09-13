@@ -34,9 +34,15 @@ def test_diagnostic_metrics_biased_model():
     y_pred = np.array([12, 22, 32]) # Systematic +2 bias
     metrics = compute_diagnostic_metrics(y_true, y_pred)
     
+    # mean_residual is (predicted - observed), so over-prediction is positive.
     assert np.isclose(metrics['mean_residual'], 2.0)
+    # The calibration regression is observed on predicted
+    # (y_true = intercept + slope * y_pred), so a model over-predicting by a
+    # constant 2 has slope 1 and intercept -2. This is NOT mean_residual with
+    # the sign flipped by coincidence -- the two use opposite conventions by
+    # design. See compute_diagnostic_metrics.
     assert np.isclose(metrics['calibration_slope'], 1.0)
-    assert np.isclose(metrics['calibration_intercept'], 2.0)
+    assert np.isclose(metrics['calibration_intercept'], -2.0)
 
 def test_decile_performance(sample_predictions):
     deciles = compute_decile_performance(sample_predictions['y_true'].values, sample_predictions['y_pred'].values)
