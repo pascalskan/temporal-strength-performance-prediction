@@ -45,7 +45,11 @@ def run_pipeline(df, group_name):
     df_lift_full["Best3SquatKg"] = df_lift_full[["Squat1Kg", "Squat2Kg", "Squat3Kg"]].max(axis=1)
     df_lift_full["Best3BenchKg"] = df_lift_full[["Bench1Kg", "Bench2Kg", "Bench3Kg"]].max(axis=1)
     df_lift_full["Best3DeadliftKg"] = df_lift_full[["Deadlift1Kg", "Deadlift2Kg", "Deadlift3Kg"]].max(axis=1)
-    lift_results = run_lift_specific_models(df_lift_full, prep.feature_cols, paths["group"])
+    
+    # Ensure we only pass feature columns that exist in the dataframe
+    lift_feature_cols = [col for col in prep.feature_cols if col not in LEAKAGE_COLUMNS]
+    
+    lift_results = run_lift_specific_models(df_lift_full, lift_feature_cols, paths["group"])
     if not lift_results.empty:
         plot_lift_comparison(lift_results, paths["group"])
 

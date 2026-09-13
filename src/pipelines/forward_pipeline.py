@@ -48,10 +48,18 @@ def run_forward_pipeline(df, group_name):
     df_model = df.dropna(subset=ENGINEERED_FEATURES)
     logger.info("Samples after filtering for required features: %s", len(df_model))
 
+    if len(df_model) < 2:
+        logger.warning("Not enough data to perform train/test split for group '%s'. Skipping.", group_name)
+        return
+
     df_model_no_attempts = df_model.drop(columns=ATTEMPT_COLUMNS, errors="ignore")
 
     X_train, X_test, y_train, y_test, _ = time_aware_split(df_model_no_attempts, ENGINEERED_FEATURES, target_col="Target_Total")
     X_train_r, X_test_r, y_train_r, y_test_r, _ = time_aware_split(df_model_no_attempts, ENGINEERED_FEATURES, target_col="Target_Retro")
+
+    if X_train.empty or X_test.empty or X_train_r.empty or X_test_r.empty:
+        logger.warning("Train or test split is empty for group '%s'. Skipping model training.", group_name)
+        return
 
     logger.info("Training retrospective reference models...")
     retro_results = train_retrospective_reference_models(X_train_r, X_test_r, y_train_r, y_test_r)
