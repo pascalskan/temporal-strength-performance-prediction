@@ -92,4 +92,8 @@ logs/
 *.bak
 
 # Academic documents
-docs/source_material/*.pdfdocs/AI_PROJECT_CONTEXT.md
+docs/source_material/*.pdf
+docs/AI_PROJECT_CONTEXT.md
+
+# Local scratch
+tracked_files.txt
