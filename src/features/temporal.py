@@ -8,7 +8,18 @@ from src.core.logging import get_logger
 logger = get_logger(__name__)
 
 
-def feature_engineering(df, athlete_col="AthleteID"):
+def feature_engineering(df, athlete_col):
+    """
+    Create temporal and engineered features, grouped per athlete.
+
+    athlete_col is required rather than defaulted. It previously defaulted
+    to "AthleteID", a column no part of this project produces, so callers
+    that omitted it raised at runtime instead of grouping correctly -- which
+    is how the retrospective and forward pipelines came to be broken while
+    the walk-forward pipeline, the only caller passing it explicitly, kept
+    working. Build the identifier with src.data.identity.build_athlete_id
+    and pass its column name.
+    """
     if athlete_col not in df.columns:
         raise ValueError(
             f"Missing required athlete identifier column: {athlete_col}"

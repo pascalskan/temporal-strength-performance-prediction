@@ -1,6 +1,7 @@
 import numpy as np
 
 from src.core.logging import get_logger
+from src.data.identity import build_athlete_id
 from src.features.temporal import feature_engineering
 from src.utils.splitting import time_aware_split
 from src.utils.scaling import scale_features
@@ -30,7 +31,9 @@ def prepare_modelling_data(df):
     """
 
     logger.info("🔹 Applying feature engineering...")
-    df = feature_engineering(df)
+    df = df.copy()
+    df["Athlete_ID"] = build_athlete_id(df)
+    df = feature_engineering(df, athlete_col="Athlete_ID")
 
     logger.info("🔹 Cleaning dataset for modelling (removing insufficient history rows)...")
 

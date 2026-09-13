@@ -74,8 +74,15 @@ def run_pipeline(df, group_name):
     # FEATURE IMPORTANCE
     run_feature_importance_analysis(
         df_model_no_attempts=df_model_no_attempts,
-        rf_model=training_results.rf_model,
-        gb_model=training_results.gb_model,
+        # run_feature_importance_analysis was refactored to take a mapping of
+        # name -> fitted model; this call site still passed the old rf_model /
+        # gb_model keywords. Names match the labels used in reporting and in
+        # the walk-forward pipeline so importance outputs line up with the
+        # comparison tables.
+        models={
+            "Random Forest": training_results.rf_model,
+            "Gradient Boosting": training_results.gb_model,
+        },
         X=prep.X, y=prep.y,
         feature_cols=prep.feature_cols,
         evaluation_dir=paths["evaluation"],

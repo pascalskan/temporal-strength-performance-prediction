@@ -1,4 +1,5 @@
 import time
+from src.data.identity import build_athlete_id
 from src.features.temporal import feature_engineering
 from src.utils.splitting import time_aware_split
 from src.evaluation.forward_reporting import save_forward_metrics, save_forward_predictions, save_retrospective_metrics, save_traditional_predictions
@@ -12,10 +13,15 @@ from src.reproducibility.metadata import save_metadata
 
 logger = get_logger(__name__)
 
-def create_forward_target(df):
-    """Creates the forward prediction target by shifting the TotalKg."""
-    df = df.sort_values(["Name", "Date"]).copy()
-    df["Target_Total"] = df.groupby("Name")["TotalKg"].shift(-1)
+def create_forward_target(df, athlete_col="Athlete_ID"):
+    """
+    Creates the forward prediction target by shifting TotalKg.
+
+    Grouped by the constructed athlete identifier rather than by Name alone,
+    so that every pipeline links an athlete's history the same way.
+    """
+    df = df.sort_values([athlete_col, "Date"]).copy()
+    df["Target_Total"] = df.groupby(athlete_col)["TotalKg"].shift(-1)
     df = df.dropna(subset=["Target_Total"])
     return df
 
@@ -39,8 +45,11 @@ def run_forward_pipeline(df, group_name):
     )
     save_metadata(metadata, base_dir / "run_metadata.json")
 
-    df = feature_engineering(df)
-    assert df.groupby("Name")["Date"].is_monotonic_increasing.all(), "Data leakage risk: dates not sorted."
+    df = df.copy()
+    df["Athlete_ID"] = build_athlete_id(df)
+    df = feature_engineering(df, athlete_col="Athlete_ID")
+    assert df.groupby("Athlete_ID")["Date"].is_monotonic_increasing.all(), \
+        "Data leakage risk: dates not sorted."
 
     df = create_forward_target(df)
     df["Target_Retro"] = df["TotalKg"]
