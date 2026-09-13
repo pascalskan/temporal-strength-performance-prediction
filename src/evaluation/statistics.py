@@ -65,33 +65,53 @@ def paired_bootstrap_comparison(
     else:
         raise ValueError(f"Unsupported metric: {metric}")
 
-    # Cluster bootstrap resampling
-    unique_athletes = merged_preds['athlete_id_a'].unique() # Use athlete_id from one of the merged sides
+    # Cluster bootstrap resampling.
+    #
+    # Both supported metrics are pooled functions of per-observation error
+    # contributions, so a resample never needs to be materialised. For a drawn
+    # multiset of athletes D:
+    #
+    #     MAE  = sum_{i in D} sum|err_i|  / sum_{i in D} n_i
+    #     RMSE = sqrt( sum_{i in D} SSE_i / sum_{i in D} n_i )
+    #
+    # Pre-aggregating each athlete's error sum and row count therefore reduces
+    # every iteration to two gathers and two sums over n_athletes, instead of
+    # concatenating n_athletes DataFrames. This is an exact reformulation, not
+    # an approximation. The RNG stream is preserved exactly, because
+    # rng.choice(k, ...) draws the same underlying integers as
+    # rng.choice(ids, ...) for ids of length k, so the same athletes are drawn
+    # in the same order. Only floating-point summation order differs; agreement
+    # with the previous row-materialising implementation was verified to 1e-12
+    # on irregular cluster sizes for both metrics.
+    #
+    # The previous form rebuilt a full DataFrame on every iteration, which made
+    # the production Raw cohort (~49,000 athletes) computationally infeasible.
+    athlete_codes, unique_athletes = pd.factorize(merged_preds['athlete_id_a'])
     n_athletes = len(unique_athletes)
+
+    # error_a / error_b already hold the per-row contribution for this metric:
+    # absolute error for 'mae', squared error for 'rmse'.
+    cluster_sum_a = np.bincount(athlete_codes, weights=np.asarray(error_a, dtype=float), minlength=n_athletes)
+    cluster_sum_b = np.bincount(athlete_codes, weights=np.asarray(error_b, dtype=float), minlength=n_athletes)
+    cluster_counts = np.bincount(athlete_codes, minlength=n_athletes).astype(float)
+
     bootstrap_diffs = []
-    
-    # Pre-group the data by athlete_id for faster lookups during the bootstrap loop
-    grouped_preds = {athlete: df for athlete, df in merged_preds.groupby('athlete_id_a')}
-    
+
     for _ in range(n_bootstraps):
-        # Sample athlete IDs with replacement
-        resampled_athlete_ids = rng.choice(unique_athletes, size=n_athletes, replace=True)
-        
-        # Collect all rows for the sampled athletes, preserving multiplicity
-        bootstrap_parts = [grouped_preds[athlete] for athlete in resampled_athlete_ids]
-        
-        # It is guaranteed that bootstrap_parts is not empty because n_athletes >= 1
-        resampled_df = pd.concat(bootstrap_parts, ignore_index=True)
+        # Positions into unique_athletes, drawn with replacement. Multiplicity
+        # is carried by the gather below, so a repeated athlete contributes
+        # repeatedly -- the property the multiplicity regression test guards.
+        draw = rng.choice(n_athletes, size=n_athletes, replace=True)
+
+        total_rows = cluster_counts[draw].sum()
+        pooled_a = cluster_sum_a[draw].sum() / total_rows
+        pooled_b = cluster_sum_b[draw].sum() / total_rows
 
         if metric == 'mae':
-            resampled_error_a = np.abs(resampled_df['y_true_a'] - resampled_df['y_pred_a'])
-            resampled_error_b = np.abs(resampled_df['y_true_b'] - resampled_df['y_pred_b'])
-            diff = np.mean(resampled_error_a) - np.mean(resampled_error_b)
-        elif metric == 'rmse':
-            resampled_error_a = (resampled_df['y_true_a'] - resampled_df['y_pred_a'])**2
-            resampled_error_b = (resampled_df['y_true_b'] - resampled_df['y_pred_b'])**2
-            diff = np.sqrt(np.mean(resampled_error_a)) - np.sqrt(np.mean(resampled_error_b))
-        
+            diff = pooled_a - pooled_b
+        else:  # rmse
+            diff = np.sqrt(pooled_a) - np.sqrt(pooled_b)
+
         bootstrap_diffs.append(diff)
 
     # Calculate confidence interval
@@ -141,6 +161,36 @@ def run_all_comparisons(
             })
     return pd.DataFrame(results)
 
+def _weighted_median(sorted_values: np.ndarray, weights: np.ndarray) -> float:
+    """
+    Median of a multiset given sorted values and integer multiplicities.
+
+    Reproduces numpy.median semantics exactly, including averaging the two
+    central order statistics when the total weight is even, so a cluster
+    bootstrap can compute the median of a resample without materialising it.
+
+    Args:
+        sorted_values: Values in ascending order.
+        weights: Multiplicity of each value, aligned to sorted_values.
+            Zero-weight entries are never selected, because a zero weight
+            leaves the cumulative total unchanged and the search returns the
+            earlier index.
+    """
+    cumulative = np.cumsum(weights)
+    total = cumulative[-1] if len(cumulative) else 0
+
+    if total <= 0:
+        return np.nan
+
+    total = int(total)
+    if total % 2 == 1:
+        return float(sorted_values[np.searchsorted(cumulative, (total + 1) // 2, side="left")])
+
+    lower = sorted_values[np.searchsorted(cumulative, total // 2, side="left")]
+    upper = sorted_values[np.searchsorted(cumulative, total // 2 + 1, side="left")]
+    return float((lower + upper) / 2.0)
+
+
 def compute_model_confidence_intervals(
     predictions_df: pd.DataFrame,
     n_bootstraps: int = 5000,
@@ -178,29 +228,92 @@ def compute_model_confidence_intervals(
         }
         
         bootstrap_metrics = {k: [] for k in point_estimates.keys()}
-        
+
         if has_athlete_id:
-            unique_athletes = valid_group['athlete_id'].unique()
+            # Cluster bootstrap over athletes, computed from per-athlete
+            # aggregates rather than by rebuilding the resampled frame on every
+            # iteration. Six of the seven metrics are pooled functions of
+            # per-observation quantities and so decompose exactly over clusters;
+            # the median does not, and is obtained from a weighted median over
+            # the pre-sorted absolute errors. See the note in
+            # paired_bootstrap_comparison for why this matters at production
+            # scale.
+            codes, unique_athletes = pd.factorize(valid_group['athlete_id'])
             n_athletes = len(unique_athletes)
-            grouped_preds = {athlete: df for athlete, df in valid_group.groupby('athlete_id')}
+
+            residual = y_pred_all - y_true_all
+            abs_error = np.abs(residual)
+
+            smape_denominator = np.abs(y_true_all) + np.abs(y_pred_all)
+            smape_valid = smape_denominator != 0
+            smape_terms = np.zeros_like(smape_denominator, dtype=float)
+            smape_terms[smape_valid] = (
+                200 * abs_error[smape_valid] / smape_denominator[smape_valid]
+            )
+
+            def _by_cluster(values=None):
+                return np.bincount(
+                    codes,
+                    weights=None if values is None else np.asarray(values, dtype=float),
+                    minlength=n_athletes,
+                ).astype(float)
+
+            cluster_n = _by_cluster()
+            cluster_abs_error = _by_cluster(abs_error)
+            cluster_sq_error = _by_cluster(residual ** 2)
+            cluster_residual = _by_cluster(residual)
+            cluster_y = _by_cluster(y_true_all)
+            cluster_y_squared = _by_cluster(y_true_all ** 2)
+            cluster_abs_y = _by_cluster(np.abs(y_true_all))
+            cluster_smape_sum = _by_cluster(smape_terms)
+            cluster_smape_n = _by_cluster(smape_valid.astype(float))
+
+            median_order = np.argsort(abs_error, kind="stable")
+            sorted_abs_error = abs_error[median_order]
+            sorted_codes = codes[median_order]
         else:
             n_obs = len(valid_group)
-            
+
         for _ in range(n_bootstraps):
             if has_athlete_id:
-                resampled_athlete_ids = rng.choice(unique_athletes, size=n_athletes, replace=True)
-                bootstrap_parts = [grouped_preds[athlete] for athlete in resampled_athlete_ids]
-                resampled_df = pd.concat(bootstrap_parts, ignore_index=True)
-                y_true = resampled_df['y_true'].values
-                y_pred = resampled_df['y_pred'].values
-            else:
-                indices = rng.choice(n_obs, size=n_obs, replace=True)
-                y_true = y_true_all[indices]
-                y_pred = y_pred_all[indices]
-                
+                draw = rng.choice(n_athletes, size=n_athletes, replace=True)
+                multiplicity = np.bincount(draw, minlength=n_athletes).astype(float)
+
+                n_resampled = cluster_n @ multiplicity
+                if n_resampled == 0:
+                    continue
+
+                sum_sq_error = cluster_sq_error @ multiplicity
+                sum_y = cluster_y @ multiplicity
+                # SST via the computational form: sum(y^2) - (sum y)^2 / n.
+                total_sum_squares = (cluster_y_squared @ multiplicity) - (sum_y ** 2) / n_resampled
+
+                rmse = np.sqrt(sum_sq_error / n_resampled)
+                mean_abs_y = (cluster_abs_y @ multiplicity) / n_resampled
+                smape_n = cluster_smape_n @ multiplicity
+
+                bootstrap_metrics['mae'].append((cluster_abs_error @ multiplicity) / n_resampled)
+                bootstrap_metrics['rmse'].append(rmse)
+                bootstrap_metrics['r2'].append(
+                    1 - sum_sq_error / total_sum_squares if total_sum_squares > 0 else np.nan
+                )
+                bootstrap_metrics['median_absolute_error'].append(
+                    _weighted_median(sorted_abs_error, multiplicity[sorted_codes])
+                )
+                bootstrap_metrics['mean_residual'].append((cluster_residual @ multiplicity) / n_resampled)
+                bootstrap_metrics['smape'].append(
+                    (cluster_smape_sum @ multiplicity) / smape_n if smape_n > 0 else 0.0
+                )
+                bootstrap_metrics['nrmse'].append(rmse / mean_abs_y if mean_abs_y != 0 else np.nan)
+                continue
+
+            indices = rng.choice(n_obs, size=n_obs, replace=True)
+            y_true = y_true_all[indices]
+            y_pred = y_pred_all[indices]
+
             if len(y_true) == 0:
                 continue
-                
+
             bootstrap_metrics['mae'].append(mean_absolute_error(y_true, y_pred))
             bootstrap_metrics['rmse'].append(np.sqrt(mean_squared_error(y_true, y_pred)))
             bootstrap_metrics['r2'].append(r2_score(y_true, y_pred) if np.var(y_true) > 0 else np.nan)
