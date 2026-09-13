@@ -2,8 +2,22 @@ import pytest
 import json
 from pathlib import Path
 import pandas as pd
+from src.io.paths import ProjectPaths
 from src.reproducibility.environment import capture_experiment_metadata, get_git_commit
 from src.reproducibility.metadata import save_metadata, ExperimentMetadata
+
+
+@pytest.fixture(autouse=True)
+def scoped_dataset():
+    """
+    Metadata records the active dataset scope, which is class-level state.
+    Declare one for the duration of each test and restore it afterwards.
+    """
+    original = ProjectPaths.dataset_scope()
+    ProjectPaths.set_dataset_scope("test_fixture")
+    yield
+    ProjectPaths._dataset_scope = original
+
 
 def test_get_git_commit_fallback():
     # This test is tricky as git might be present.
@@ -11,11 +25,12 @@ def test_get_git_commit_fallback():
     commit = get_git_commit()
     assert isinstance(commit, str) or commit is None
 
+
 def test_metadata_creation():
     df = pd.DataFrame({'a': [1, 2], 'b': [3, 4]})
     metadata = capture_experiment_metadata(
         df=df,
-        dataset_name="test_dataset",
+        cohort="raw",
         execution_mode="test_mode",
         random_seed=42
     )
@@ -25,21 +40,36 @@ def test_metadata_creation():
     assert metadata.random_seed == 42
     assert "pandas" in metadata.environment.package_versions
 
+
+def test_metadata_records_dataset_and_cohort_separately():
+    """
+    The cohort alone does not identify which dataset produced a result.
+    Recording only the cohort is what previously allowed fixture output to be
+    stamped as production output.
+    """
+    df = pd.DataFrame({'a': [1, 2]})
+    metadata = capture_experiment_metadata(df=df, cohort="raw", execution_mode="walk_forward")
+
+    assert metadata.cohort == "raw"
+    assert metadata.dataset_source == "test_fixture"
+
+
 def test_metadata_serialization(tmp_path: Path):
     df = pd.DataFrame({'a': [1, 2]})
     metadata = capture_experiment_metadata(
         df=df,
-        dataset_name="test_dataset",
+        cohort="raw",
         execution_mode="test_mode"
     )
-    
+
     file_path = tmp_path / "run_metadata.json"
     save_metadata(metadata, file_path)
-    
+
     assert file_path.exists()
-    
+
     with open(file_path, 'r') as f:
         loaded_data = json.load(f)
-    
-    assert loaded_data['dataset_name'] == "test_dataset"
+
+    assert loaded_data['cohort'] == "raw"
+    assert loaded_data['dataset_source'] == "test_fixture"
     assert loaded_data['environment']['python_version'] is not None

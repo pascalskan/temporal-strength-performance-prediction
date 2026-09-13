@@ -14,7 +14,13 @@ class ExperimentMetadata:
     timestamp: str
     git_commit: Optional[str]
     random_seed: Optional[int]
-    dataset_name: str
+    # The dataset file the run consumed (e.g. "openpowerlifting",
+    # "test_fixture") and the equipment cohort within it ("raw", "equipped").
+    # These are independent: the cohort alone does not identify the source, and
+    # recording only the cohort is what previously allowed fixture output to be
+    # stamped as production output.
+    dataset_source: str
+    cohort: str
     dataset_rows: int
     dataset_columns: int
     execution_mode: str

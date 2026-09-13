@@ -33,7 +33,7 @@ def run_forward_pipeline(df, group_name):
 
     metadata = capture_experiment_metadata(
         df=df,
-        dataset_name=group_name,
+        cohort=group_name,
         execution_mode="forward",
         random_seed=42  # Project standard baseline seed
     )

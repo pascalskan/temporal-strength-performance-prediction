@@ -141,7 +141,7 @@ def run_audit(raw_df: pd.DataFrame, output_dir: Path):
 
 if __name__ == '__main__':
     # Script execution capability for independent running
-    dataset_path = ProjectPaths.dataset_path("openpowerlifting.csv")
+    dataset_path = ProjectPaths.use_dataset("openpowerlifting.csv")
     if not dataset_path.exists():
         logger.error(f"Dataset not found at {dataset_path}")
     else:

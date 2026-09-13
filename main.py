@@ -28,7 +28,9 @@ def main():
         logger.info("PRODUCTION MODE")
         dataset_filename = "openpowerlifting.csv"
 
-    dataset_path = ProjectPaths.dataset_path(dataset_filename)
+    # Scopes results to this dataset, so a --test run cannot land in
+    # (or overwrite) the production results tree.
+    dataset_path = ProjectPaths.use_dataset(dataset_filename)
     logger.info("Loading dataset from: %s", dataset_path)
     
     df = load_data(dataset_path)

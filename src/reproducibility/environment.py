@@ -5,6 +5,7 @@ from datetime import datetime, UTC
 import importlib.metadata
 import pandas as pd
 from typing import Optional, Dict
+from src.io.paths import ProjectPaths
 from src.reproducibility.metadata import EnvironmentMetadata, ExperimentMetadata
 
 def get_git_commit() -> Optional[str]:
@@ -39,17 +40,26 @@ def capture_environment() -> EnvironmentMetadata:
     )
 
 def capture_experiment_metadata(
-    df: pd.DataFrame, 
-    dataset_name: str, 
-    execution_mode: str, 
+    df: pd.DataFrame,
+    cohort: str,
+    execution_mode: str,
     random_seed: Optional[int] = None
 ) -> ExperimentMetadata:
-    """Generates a full metadata object for the current experiment run."""
+    """
+    Generates a full metadata object for the current experiment run.
+
+    Args:
+        df: The data the run consumed.
+        cohort: Equipment cohort within the dataset ("raw", "equipped").
+        execution_mode: Which evaluation protocol produced these results.
+        random_seed: Seed governing the run, where one applies.
+    """
     return ExperimentMetadata(
         timestamp=datetime.now(UTC).isoformat(),
         git_commit=get_git_commit(),
         random_seed=random_seed,
-        dataset_name=dataset_name,
+        dataset_source=ProjectPaths.dataset_scope(),
+        cohort=cohort,
         dataset_rows=len(df),
         dataset_columns=len(df.columns),
         execution_mode=execution_mode,

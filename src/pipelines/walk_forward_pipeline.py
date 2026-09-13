@@ -80,7 +80,7 @@ def run_walk_forward_pipeline(df, group_name):
 
     metadata = capture_experiment_metadata(
         df=df,
-        dataset_name=group_name,
+        cohort=group_name,
         execution_mode="walk_forward",
         random_seed=42,
     )

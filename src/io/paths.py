@@ -2,6 +2,23 @@ from pathlib import Path
 
 
 class ProjectPaths:
+    """
+    Filesystem layout for the project.
+
+    Results are scoped by the dataset that produced them, so that a run over
+    the deterministic fixture cannot be mistaken for, or overwrite, a run over
+    the production dataset. Both previously resolved to results/<cohort>,
+    because the cohort name ("raw", "equipped") is chosen independently of the
+    dataset file, which meant `--test` wrote 905-row fixture output into the
+    production path and stamped it as the raw cohort.
+
+    Declaring the scope is mandatory: results_dir() raises until a caller has
+    said which dataset is in play. Prefer use_dataset(), which resolves the
+    input path and sets the scope together so the two cannot drift apart.
+    """
+
+    _dataset_scope = None
+
     @staticmethod
     def project_root() -> Path:
         return Path(__file__).resolve().parents[2]
@@ -11,8 +28,40 @@ class ProjectPaths:
         return cls.project_root() / "data"
 
     @classmethod
+    def set_dataset_scope(cls, label: str) -> None:
+        """Declare which dataset subsequent results belong to."""
+        if not label:
+            raise ValueError("Dataset scope must be a non-empty label.")
+        cls._dataset_scope = label
+
+    @classmethod
+    def dataset_scope(cls) -> str:
+        return cls._dataset_scope
+
+    @classmethod
+    def clear_dataset_scope(cls) -> None:
+        """Reset the scope. Intended for tests."""
+        cls._dataset_scope = None
+
+    @classmethod
+    def use_dataset(cls, filename: str) -> Path:
+        """
+        Resolve a dataset path and scope results to it in one step.
+
+        Returns the path to the dataset file.
+        """
+        cls.set_dataset_scope(Path(filename).stem)
+        return cls.dataset_path(filename)
+
+    @classmethod
     def results_dir(cls) -> Path:
-        path = cls.project_root() / "results"
+        if cls._dataset_scope is None:
+            raise RuntimeError(
+                "No dataset scope declared, so results have no provenance and "
+                "would be written to a shared, ambiguous location. Call "
+                "ProjectPaths.use_dataset(<filename>) before producing results."
+            )
+        path = cls.project_root() / "results" / cls._dataset_scope
         path.mkdir(parents=True, exist_ok=True)
         return path
 
