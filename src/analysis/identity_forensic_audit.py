@@ -11,6 +11,11 @@ from src.io.paths import ProjectPaths
 
 logger = get_logger(__name__)
 
+# Tolerated backwards movement in recorded age between consecutive competitions,
+# absorbing OpenPowerlifting's half-year age approximations. Anything beyond
+# this is treated as an identity-collision signal.
+AGE_REVERSAL_TOLERANCE_YEARS = 0.5
+
 
 def run_identity_audit(cleaned_df: pd.DataFrame, output_dir: Path):
     """
@@ -72,9 +77,24 @@ def run_identity_audit(cleaned_df: pd.DataFrame, output_dir: Path):
         axis=1
     )
 
+    # Age reversal: an athlete's recorded age must not fall as time advances.
+    # The age_range heuristic above cannot detect this, because max - min is
+    # always non-negative -- a 40 -> 39 sequence is invisible to it. A reversal
+    # is a direct signal that two people have been merged into one identity.
+    # OpenPowerlifting records some ages as approximations (e.g. 24.5 meaning
+    # "24 or 25"), so a tolerance absorbs that rounding rather than flagging it.
+    phys_stats['max_age_reversal_years'] = (
+        cleaned_df
+        .sort_values('Date')
+        .groupby('athlete_id')['Age']
+        .apply(lambda ages: max(0.0, float(-ages.diff().min()))
+               if len(ages) > 1 and pd.notna(ages.diff().min()) else 0.0)
+    )
+
     suspicious_phys = phys_stats[
         (phys_stats['bw_range'] > 40) | 
         (phys_stats['age_range'] > phys_stats['span_years'] + 1) | 
+        (phys_stats['max_age_reversal_years'] > AGE_REVERSAL_TOLERANCE_YEARS) |
         (~phys_stats['age_progression_ok'])
     ].reset_index()
     suspicious_phys.to_csv(output_dir / "suspicious_physiological_inconsistencies.csv", index=False)
@@ -89,6 +109,11 @@ def run_identity_audit(cleaned_df: pd.DataFrame, output_dir: Path):
     }, {
         "risk_heuristic": "Physiological Inconsistency",
         "suspicious_identity_count": len(suspicious_phys),
+    }, {
+        "risk_heuristic": f"Age Reversal (>{AGE_REVERSAL_TOLERANCE_YEARS}y)",
+        "suspicious_identity_count": int(
+            (phys_stats['max_age_reversal_years'] > AGE_REVERSAL_TOLERANCE_YEARS).sum()
+        ),
     }])
     risk_summary.to_csv(output_dir / "identity_collision_risk_summary.csv", index=False)
     logger.info("Collision risk summaries saved.")
