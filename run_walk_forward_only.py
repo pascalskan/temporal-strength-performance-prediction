@@ -3,7 +3,7 @@ Minimal execution entrypoint for running ONLY the walk-forward evaluation pipeli
 """
 import argparse
 from src.data.loader import load_data
-from src.data.cleaning import clean_data
+from src.data.cleaning import clean_data, split_equipment_cohorts
 from src.core.logging import get_logger
 from src.io.paths import ProjectPaths
 from src.pipelines.walk_forward_pipeline import run_walk_forward_pipeline
@@ -37,11 +37,13 @@ def main():
     df = clean_data(df)
 
     logger.info("Splitting dataset into 'raw' and 'equipped' cohorts...")
-    df_raw = df[df["Equipment"] == "Raw"]
-    df_equipped = df[df["Equipment"].isin(["Wraps", "Single-ply"])].copy()
-    
+
+    df_raw, df_equipped = split_equipment_cohorts(df)
+
+    # The equipped cohort is Single-ply in all but name (Wraps contributes
+    # ~0.12% of records). See src/config/constants.py for composition.
     logger.info("Raw samples: %d", len(df_raw))
-    logger.info("Equipped (Single-ply + Wraps) samples: %d", len(df_equipped))
+    logger.info("Equipped samples: %d", len(df_equipped))
 
     logger.info("Starting walk-forward evaluation...")
     if not df_raw.empty:

@@ -1,7 +1,7 @@
 import argparse
 import pandas as pd
 from src.data.loader import load_data
-from src.data.cleaning import clean_data
+from src.data.cleaning import clean_data, split_equipment_cohorts
 from src.core.logging import get_logger
 from src.io.paths import ProjectPaths
 from src.pipelines.retrospective_pipeline import run_pipeline
@@ -40,16 +40,12 @@ def main():
 
     logger.info("Splitting dataset into 'raw' and 'equipped' cohorts...")
 
-    df_raw = df[df["Equipment"] == "Raw"]
-    
-    # SCIENTIFIC FIX: Merge 'Wraps' and 'Single-ply' into a single 'equipped' cohort.
-    # The wraps-only subgroup lacked sufficient longitudinal observations for valid walk-forward forecasting.
-    # To preserve temporal validity while maintaining equipment-specific analysis, wraps observations 
-    # were merged with single-ply into a unified equipped cohort.
-    df_equipped = df[df["Equipment"].isin(["Wraps", "Single-ply"])].copy()
-    
+    df_raw, df_equipped = split_equipment_cohorts(df)
+
+    # The equipped cohort is Single-ply in all but name (Wraps contributes
+    # ~0.12% of records). See src/config/constants.py for composition.
     logger.info("Raw samples: %d", len(df_raw))
-    logger.info("Equipped (Single-ply + Wraps) samples: %d", len(df_equipped))
+    logger.info("Equipped samples: %d", len(df_equipped))
 
     logger.info("Running Retrospective Pipelines...")
     if not df_raw.empty:

@@ -1,12 +1,11 @@
 import numpy as np
 
+from src.config.constants import (
+    EQUIPPED_EQUIPMENT,
+    RAW_EQUIPMENT,
+    VALID_EQUIPMENT,
+)
 from src.config.features import ATTEMPT_COLUMNS
-
-
-VALID_EQUIPMENT = {
-    "Raw",
-    "Wraps"
-}
 
 
 def clean_data(df):
@@ -46,3 +45,22 @@ def clean_data(df):
             )
 
     return df
+
+
+def split_equipment_cohorts(df):
+    """
+    Partition cleaned data into the raw and equipped evaluation cohorts.
+
+    Both entrypoints previously hardcoded their own equipment lists, which is
+    how they came to disagree with the cleaning filter. Routing every caller
+    through this function keeps the split and the filter defined in one place.
+
+    Args:
+        df: Cleaned data, already restricted to VALID_EQUIPMENT.
+
+    Returns:
+        (df_raw, df_equipped) as independent copies.
+    """
+    df_raw = df[df["Equipment"].isin(RAW_EQUIPMENT)].copy()
+    df_equipped = df[df["Equipment"].isin(EQUIPPED_EQUIPMENT)].copy()
+    return df_raw, df_equipped
