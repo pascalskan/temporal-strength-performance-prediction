@@ -20,6 +20,9 @@ class WalkForwardEvaluator:
     Implements expanding-window walk-forward validation for temporal forecasting.
     Recomputes features iteratively to prevent temporal leakage.
     """
+
+    # Columns the evaluator itself depends on, independent of feature_cols.
+    REQUIRED_COLUMNS = ("Date", "MeetName")
     def __init__(
         self, 
         models: Dict[str, Any], 
@@ -59,7 +62,18 @@ class WalkForwardEvaluator:
             feature_cols: List of features to be passed into models
         """
         df_raw = df_raw.copy()
-        
+
+        # Fail early and legibly. These are consumed deep inside the fold loop
+        # (Date for period assignment, MeetName when composing observation_id),
+        # where a missing column would otherwise surface as a bare KeyError
+        # raised from inside a DataFrame.apply lambda.
+        missing = [c for c in self.REQUIRED_COLUMNS if c not in df_raw.columns]
+        if missing:
+            raise ValueError(
+                f"Walk-forward evaluation requires columns {missing}, which are "
+                f"absent from the input. Available columns: {sorted(df_raw.columns)}"
+            )
+
         # 1. Ensure correct athlete ID grouping to prevent collision
         df_raw["Athlete_ID"] = build_athlete_id(df_raw)
         

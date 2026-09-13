@@ -40,6 +40,8 @@ class TestWalkForward(unittest.TestCase):
         df_b = pd.DataFrame(data_b)
         
         self.df_raw = pd.concat([df_a, df_b], ignore_index=True).sort_values(by='Date').reset_index(drop=True)
+        # MeetName is required by the evaluator to compose observation_id.
+        self.df_raw['MeetName'] = 'Meet ' + self.df_raw['Date'].dt.strftime('%Y-%m')
         # Add dummy attempt columns so feature engineering doesn't fail
         for col in ['Squat1Kg', 'Squat2Kg', 'Squat3Kg', 'Bench1Kg', 'Bench2Kg', 'Bench3Kg', 'Deadlift1Kg', 'Deadlift2Kg', 'Deadlift3Kg']:
             self.df_raw[col] = 100
@@ -84,3 +86,11 @@ class TestWalkForward(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+    def test_missing_required_columns_raise_clear_error(self):
+        """A missing structural column must be reported by name, not as a KeyError."""
+        evaluator = WalkForwardEvaluator(models={}, baselines={}, min_train_periods=5)
+        df = self.df_raw.drop(columns=['MeetName'])
+        with self.assertRaises(ValueError) as ctx:
+            evaluator.evaluate(df, feature_engineering, create_walk_forward_target, self.feature_cols)
+        self.assertIn('MeetName', str(ctx.exception))
