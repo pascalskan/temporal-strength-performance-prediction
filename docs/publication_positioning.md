@@ -1,59 +1,52 @@
 # Publication Positioning Document
 
-This document defines the scientific and methodological identity of the paper derived from the `temporal-strength-performance-prediction` repository. Its purpose is to align the research narrative with the evidence provided by the codebase and prevent claim boundary violations.
+This document defines the scientific and methodological identity of the paper derived from the `temporal-strength-performance-prediction` repository. Its purpose is to align the research narrative with the evidence provided by the codebase, enforce strict claim boundaries, and document unresolved scientific gaps.
 
 ## 1. Paper Identity
 
-**Methodological Critique and Blueprint.**
+**Methodological Case Study in Applied Forecasting Evaluation.**
 
-This paper uses sports performance forecasting as a case study to quantitatively demonstrate the degree to which evaluation methodology, not algorithmic complexity, dictates model performance. It is primarily a paper about *how to evaluate models in time-series contexts*, presented through a compelling and accessible real-world example.
+This paper uses competitive athlete performance forecasting to demonstrate how the choice of evaluation protocol materially influences measured predictive performance and comparative model conclusions. It highlights that temporally consistent validation can yield substantially different inferences from retrospective evaluation.
 
 ## 2. Problem Statement
 
-In applied machine learning, particularly in domains like sports analytics, models are often evaluated using standard retrospective techniques (e.g., randomized k-fold cross-validation). This common practice introduces **temporal leakage**, where information from the future is implicitly made available to the model during training. This leads to misleadingly optimistic performance metrics and a distorted view of model superiority, creating a reproducibility crisis where reported gains fail to translate to real-world forward-prediction scenarios.
+In applied machine learning literature, models intended for forward forecasting are frequently evaluated using retrospective techniques, such as randomized cross-validation. While retrospective evaluation is statistically valid for static pattern recognition or imputation tasks, it is structurally inappropriate for establishing forward forecasting capability. Applying retrospective evaluation to temporal data can introduce an optimistic bias by implicitly granting models access to future population trends or individual subsequent states.
 
 ## 3. Why This Matters Scientifically
 
-Science requires that we test hypotheses under conditions that match the real world. For forecasting, this means models must only use information available at the time of prediction. By violating this principle, the current standard practice in much of the applied literature is not measuring a model's predictive capability, but rather its ability to reconstruct a known history.
-
-This work matters because it:
-a) Provides a **quantitative, reproducible measure** of this methodological error.
-b) Presents a **robust, open-source framework** that corrects this error.
-c) Re-establishes a more **realistic and defensible performance baseline** for a complex forecasting problem, forcing future work to demonstrate genuine, temporally-sound improvement.
+The scientific literature in sports analytics and applied forecasting risks accumulating claims of predictive superiority that may not generalize to actual deployment scenarios. By quantifying the performance disparity between retrospective and temporal evaluation protocols on the identical dataset, this work demonstrates that the evaluation framework itself is a **major determinant of measured performance** in assessing model capability.
 
 ## 4. Novelty
 
-The novelty is **not** the idea that temporal data requires temporal validation. This is known.
-
-The novelty is the **rigorous, end-to-end, and reproducible implementation** that moves this principle from a well-known "gotcha" to a solved problem in this domain. We provide the first open-source framework that allows for a direct, quantitative comparison between leaky and non-leaky evaluation pipelines, complete with statistical significance testing of the resulting performance gap.
+The primary contribution is a rigorous, quantitative demonstration of the impact of evaluation protocol selection. We provide an open-source, reproducible framework that explicitly measures the performance delta when identical models transition from a retrospective environment to a strictly constrained, expanding-window temporal environment, allowing for an analysis of how comparative model rankings may shift in response.
 
 ## 5. Benchmark Philosophy
 
-The models included in this paper (Persistence, Rolling Mean, Ridge, Random Forest, Gradient Boosting) are not intended to be an exhaustive list of all possible algorithms. Rather, they are chosen as **representative archetypes**:
-
-*   **Temporal Baselines (Persistence, Rolling Mean):** Represent simple, no-cost heuristics.
-*   **Statistical Models (Ridge):** Represent a classic, interpretable regression approach.
-*   **Machine Learning Ensembles (Random Forest, Gradient Boosting):** Represent complex, non-linear, high-capacity models that are often considered "state-of-the-art" in applied settings.
-
-The purpose of the benchmark is not to crown a "winner," but to use these archetypes to demonstrate how their relative performance rankings **shift dramatically** depending on the evaluation protocol.
+The benchmark models (Persistence, Rolling Mean, Ridge, Random Forest, Gradient Boosting) are representative archetypes rather than an exhaustive search for state-of-the-art performance. They serve to illustrate how evaluation methodology impacts different classes of algorithms (heuristics vs. linear models vs. complex ensembles).
 
 ## 6. Evaluation Philosophy
 
-**"The evaluation protocol is the most important parameter to tune."**
-
-Our philosophy is that a robust evaluation framework is more critical than the choice of model. The core of this paper is the `WalkForwardEvaluator`, which enforces temporal discipline through an expanding-window design. All metrics derived from this evaluator are considered "true" performance, while metrics from the retrospective pipeline are considered "inflated" or "leaky." We supplement this with athlete-level bootstrapping to generate confidence intervals, acknowledging that point-metric comparisons are insufficient for making credible claims.
+Our philosophy is that evaluation methodology must match the deployment constraint. Retrospective evaluation is not invalid, but it answers the wrong question for forecasting. The `WalkForwardEvaluator` enforces temporal discipline. By comparing its outputs to standard retrospective outputs, we measure the **protocol-induced discrepancy** introduced by misapplied evaluation protocols.
 
 ## 7. Publication Audience
 
-The primary audience is the **applied machine learning research community**. These are researchers and practitioners who build and evaluate predictive models on time-series data.
-
-The secondary audience includes **sports scientists and data analysts** who can use this work to set more realistic expectations for their own forecasting initiatives.
-
-The paper should be written to be accessible to a technical ML audience while using the sports context as a clear and motivating example.
+*   **Primary:** Applied machine learning researchers and data scientists focused on time-series evaluation methodology.
+*   **Secondary:** Academic reviewers and practitioners in sports analytics and performance science.
 
 ## 8. What This Paper Is NOT
 
-*   **It is NOT a "which model is best for powerlifting" paper.** It is a paper demonstrating how to properly *ask* that question.
-*   **It is NOT a deep dive into the physiology or strategy of powerlifting.** The domain is a model system, not the subject of inquiry itself.
-*   **It is NOT a claim that machine learning is "bad" or "useless."** It is a claim that its true performance is often overestimated and must be validated against simple, robust baselines under strict temporal conditions.
-*   **It is NOT a perfect, "leakage-proof" solution.** It is a robust and practical framework designed to prevent the most common and egregious forms of temporal leakage in event-based forecasting.
+*   **It is NOT a claim to have "solved" temporal leakage.** We mitigate a specific structural form of it; subtle leakage vectors may always remain.
+*   **It is NOT a definitive benchmark.** We are not claiming these models represent the absolute upper bound of performance.
+*   **It is NOT a dismissal of retrospective evaluation.** Retrospective evaluation is a valid tool for certain tasks; it is merely inappropriate for justifying forward-prediction claims.
+*   **It is NOT a claim that simple baselines universally outperform machine learning.** The findings are bounded by the specific dataset, feature set, and evaluation protocol implemented.
+
+## 9. Required Scientific Strengthening (Unresolved Gaps)
+
+While the core infrastructure is robust, the following gaps should be addressed to maximize publication defensibility:
+
+*   **Defensible Hyperparameter Optimization:** Currently, ML models use default or arbitrarily chosen hyperparameters. Without rigorous, nested, temporally-safe tuning, claims about relative model performance are vulnerable to the attack that the ML models are simply under-optimized.
+*   **Feature Ablation Studies:** The specific contribution of engineered features versus raw history is not systematically isolated.
+*   **Multi-Horizon Forecasting:** The current framework predicts only the immediate next event ($t+1$). Expanding to multi-step prediction could provide deeper insights into the comparative advantages of different model classes.
+*   **Broader Representative Benchmark Sensitivity Analysis:** The current model set is representative but limited. A broader sensitivity analysis including other classes of temporal models would help assess how these findings apply across different algorithmic approaches.
+*   **Data Forensic Audit & Leakage Provenance:** OpenPowerlifting is a living dataset. Retroactive corrections to historical records are a known form of unpreventable leakage. A strict audit of data versioning and provenance is required to bound this risk.
+*   **External Validity Tests:** Validating the findings against a completely independent dataset (e.g., a different sport or a holdout cohort not drawn from the same underlying distribution) **would strengthen generalisability claims.**

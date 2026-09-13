@@ -1,26 +1,24 @@
-# Temporal Strength Performance Prediction
+# Temporal Evaluation Methodology in Sports Performance Prediction
 
 [![Python CI](https://github.com/pascalskan/temporal-strength-performance-prediction/actions/workflows/ci.yml/badge.svg)](https://github.com/pascalskan/temporal-strength-performance-prediction/actions/workflows/ci.yml)
 
-A research engineering project investigating whether machine learning models provide more reliable forward prediction of competitive strength performance than traditional deterministic estimation methods.
+A research engineering project investigating how evaluation methodology and temporal leakage affect machine learning benchmarking in sports performance prediction.
 
-This repository implements a reproducible experimental framework for comparing traditional strength estimation formulas, statistical baselines, and machine learning models under both retrospective and temporally consistent forward evaluation conditions.
+This repository implements a reproducible, leakage-safe experimental framework for evaluating machine learning models against temporal baselines (Persistence, Rolling Mean, Drift) using an expanding-window walk-forward validation strategy.
 
 ---
 
 ## Overview
 
-Predicting athletic performance is a common applied machine learning problem, but evaluation methodology often introduces misleading conclusions.
+Predicting athletic performance is a common applied machine learning problem, but evaluation methodology often introduces misleading conclusions. 
 
-Traditional strength estimation methods such as **Epley** and **Brzycki** are widely used for estimating performance from known lifting data, while machine learning approaches are frequently reported as outperforming classical methods.
+Historically, machine learning models in sports analytics are evaluated using randomized cross-validation or static train-test splits. These approaches allow for **temporal leakage**, where models implicitly learn future population trends or observe an athlete's future state before predicting their past.
 
-However, retrospective evaluation frameworks often allow structural leakage, where models effectively reconstruct known outcomes rather than genuinely predict unseen performance.
+When evaluated retrospectively, machine learning models frequently appear to achieve extraordinary accuracy. However, when subjected to strict, leakage-safe temporal validation, apparent performance drops significantly, and simple baselines often prove highly competitive.
 
-This project investigates that problem directly.
+### Core Research Question
 
-Core question:
-
-> Do machine learning models genuinely outperform traditional strength estimation methods when evaluated under realistic forward prediction conditions?
+> How does strict, leakage-safe temporal validation alter conventional conclusions regarding machine learning superiority in sports performance prediction?
 
 ---
 
@@ -28,15 +26,11 @@ Core question:
 
 This repository implements:
 
-- leakage-aware predictive modelling
-- temporally consistent forward evaluation
-- deterministic traditional baseline implementation
-- statistical baseline comparison
-- machine learning regression pipelines
-- engineered longitudinal athlete feature generation
-- reproducible experiment orchestration
-- automated testing and CI validation
-- structured result analysis
+- **Leakage-safe temporal validation:** Expanding-window walk-forward forecasting.
+- **Forecasting-safe feature engineering:** Features computed strictly from historical windows.
+- **Athlete-level temporal baselines:** Persistence, Rolling Mean, and Drift models.
+- **Statistical significance testing:** Bootstrap confidence intervals for metric comparison.
+- **Reproducible experiment orchestration:** Deterministic pipelines with automated CI validation.
 
 Key engineering characteristics:
 
@@ -45,7 +39,9 @@ Key engineering characteristics:
 - deterministic validation fixtures
 - runtime validation safeguards
 - reproducibility-oriented experiment execution
+- pinned dependency management
 - automated CI testing pipeline
+- structured experiment metadata capture
 
 ---
 
@@ -55,74 +51,48 @@ Key engineering characteristics:
 
 Implemented models:
 
-#### Traditional deterministic methods
-- Epley formula
-- Brzycki formula
+#### Temporal Forecasting Baselines
+- **Persistence:** Predicts the athlete's most recent performance.
+- **Rolling Mean:** Predicts the average of the athlete's recent performances.
+- **Drift:** Extrapolates the athlete's historical trajectory.
 
-#### Statistical baseline
+#### Statistical Models
 - Linear Regression
+- Ridge Regression
 
-#### Machine learning models
-- Linear Regression (engineered features)
-- Random Forest Regression
-- Gradient Boosting Regression
+#### Machine Learning Models
+- Random Forest Regressor
+- Gradient Boosting Regressor
 
 ---
 
 ### Feature Engineering
 
-The predictive framework incorporates:
+The predictive framework incorporates forecasting-safe features:
 
-**Demographic features**
-- age
-- sex
-- bodyweight
+- **Demographics:** age, sex, bodyweight
+- **Historical performance:** previous competition totals, rolling means, rolling standard deviation
+- **Experience:** competition count, competition history depth
+- **Consistency:** performance variability, coefficient of variation
 
-**Historical performance features**
-- previous competition totals
-- rolling means
-- rolling standard deviation
-- progression trends
-- momentum indicators
-
-**Experience features**
-- competition count
-- competition history depth
-- athlete progression metrics
-
-**Consistency features**
-- performance variability
-- coefficient of variation
+*All features are strictly engineered using only data available prior to the prediction timestamp.*
 
 ---
 
-### Evaluation Frameworks
+### Evaluation Framework
 
-Two evaluation paradigms are implemented.
+The core evaluation strategy is **Expanding-Window Walk-Forward Validation**.
 
-#### Retrospective Evaluation
-
-Standard modelling approach where training and testing occur within the same temporal context.
+Models are trained on an initial historical window (e.g., years 1-5). They then forecast the *immediate next event* for each athlete in year 6. The training window expands to include year 6, and models predict year 7. This process continues iteratively.
 
 Purpose:
-- benchmark comparison
-- conventional ML evaluation
 
-Limitation:
-- vulnerable to reconstruction bias / leakage
+- ensures genuine forward-prediction assessment
+- prevents structural leakage (future-to-past information flow)
+- aligns evaluation with real-world forecasting constraints
+- provides robust athlete-level confidence intervals via bootstrapping
 
----
-
-#### Forward Prediction Evaluation
-
-Temporal split framework where models predict future athlete performance using only historical information.
-
-Purpose:
-- realistic predictive assessment
-- leakage-aware evaluation
-- genuine generalisation testing
-
-This represents the project's core scientific contribution.
+This represents the project’s core scientific contribution.
 
 ---
 
@@ -134,6 +104,13 @@ temporal-strength-performance-prediction/
 ├── .github/
 │   └── workflows/
 │       └── ci.yml
+│
+├── data/
+│   └── test_fixture.csv
+│
+├── docs/
+│
+├── scripts/
 │
 ├── src/
 │   ├── analysis/
@@ -151,13 +128,22 @@ temporal-strength-performance-prediction/
 │
 ├── tests/
 │
-├── validation/
-│
+├── CITATION.cff
+├── LICENSE
+├── README.md
+├── create_validation_fixture.py
 ├── main.py
-├── run_all.py
-├── requirements.txt
-└── README.md
+├── pytest.ini
+└── requirements.txt
 ```
+
+Architecture design principles:
+
+- separation of concerns
+- explicit package boundaries
+- reusable pipeline orchestration
+- testable modular components
+- reproducibility-first experiment execution
 
 ---
 
@@ -173,12 +159,14 @@ cd temporal-strength-performance-prediction
 Create virtual environment:
 
 ### Windows
+
 ```bash
 python -m venv .venv
 .venv\Scripts\activate
 ```
 
 ### macOS / Linux
+
 ```bash
 python -m venv .venv
 source .venv/bin/activate
@@ -195,21 +183,21 @@ pip install -r requirements.txt
 
 ## Quick Start
 
-Run full experimental pipeline:
+Run the full experimental pipeline:
 
 ```bash
-python run_all.py
+python main.py
 ```
 
-This executes:
+This executes the complete experimental workflow, including:
 
-- preprocessing
-- feature engineering
-- retrospective evaluation
-- forward prediction evaluation
-- statistical comparison
-- analysis generation
-- result export
+- data preprocessing
+- temporal feature engineering
+- expanding-window walk-forward evaluation
+- baseline comparison
+- statistical significance testing
+- performance analysis
+- result generation
 
 ---
 
@@ -218,8 +206,12 @@ This executes:
 Run test suite:
 
 ```bash
-pytest
+pytest -q
 ```
+
+Current repository validation:
+
+- 25 automated tests passing
 
 Compile validation:
 
@@ -233,6 +225,16 @@ Import smoke validation:
 python -c "import src.analysis; import src.config; import src.contracts; import src.core; import src.data; import src.evaluation; import src.features; import src.io; import src.models; import src.pipelines; import src.reproducibility; import src.utils"
 ```
 
+Testing coverage includes:
+
+- package import integrity
+- contract validation
+- data cleaning behaviour
+- metric correctness
+- splitting behaviour
+- reproducibility safeguards
+- training contract integrity
+
 ---
 
 ## Continuous Integration
@@ -242,14 +244,14 @@ GitHub Actions CI automatically validates:
 - dependency installation
 - Python compilation
 - automated tests
-- core module imports
+- core package imports
 
 Triggered on:
 
 - push to `main`
-- pull requests
+- pull requests targeting `main`
 
-This helps preserve engineering integrity and reproducibility.
+This helps preserve engineering integrity, reproducibility, and deployment confidence.
 
 ---
 
@@ -257,14 +259,19 @@ This helps preserve engineering integrity and reproducibility.
 
 This project uses competition data derived from the **OpenPowerlifting** dataset.
 
-Tracked repository contents intentionally exclude:
+Repository contents intentionally exclude:
 
 - raw full datasets
 - generated experiment outputs
 - cached artifacts
 - local virtual environments
+- logs
+- environment secrets
+- machine-specific temporary files
 
 This keeps the repository lightweight, reproducible, and version-control appropriate.
+
+A deterministic validation fixture is included for automated testing and reproducibility verification.
 
 ---
 
@@ -272,15 +279,20 @@ This keeps the repository lightweight, reproducible, and version-control appropr
 
 Reproducibility considerations include:
 
+- pinned dependency versions
 - deterministic validation fixtures
 - controlled preprocessing
 - leakage-aware temporal splitting
-- consistent evaluation metrics
+- standardised pytest execution
 - CI-backed validation
+- structured runtime metadata
+- environment-aware experiment recording
+
+This repository is designed as a reproducible research software artifact rather than a one-off academic code submission.
 
 Note:
 
-Full experimental reproducibility depends on access to the same source dataset and environment dependencies.
+Full experimental reproducibility depends on access to the same source dataset and compatible runtime environment.
 
 ---
 
@@ -288,13 +300,11 @@ Full experimental reproducibility depends on access to the same source dataset a
 
 Core findings from the research:
 
-- traditional deterministic methods perform extremely well under retrospective evaluation
-- this performance is largely attributable to structural reconstruction rather than genuine prediction
-- machine learning models show stronger forward predictive robustness
-- feature engineering contributes more to predictive performance than model complexity
-- temporal evaluation methodology fundamentally changes model rankings
+- **Retrospective leakage artificially inflates ML performance:** When evaluated using randomized splits, ML models show extraordinary accuracy due to implicit structural leakage.
+- **Temporal baselines are highly competitive:** Under strict walk-forward evaluation, simple baselines like Rolling Mean and Persistence perform remarkably well, challenging the presumed necessity of complex ML for athlete forecasting.
+- **Evaluation methodology determines the outcome:** The comparative ranking of models shifts dramatically when transitioning from retrospective to temporally consistent evaluation frameworks.
 
-This demonstrates that evaluation design is a critical component of predictive modelling.
+This demonstrates that evaluation design is fundamentally more impactful than model selection in applied predictive modelling.
 
 ---
 
@@ -306,14 +316,15 @@ Current limitations include:
 - absence of physiological / training load variables
 - short-horizon forward prediction
 - limited subgroup balance
-- classical ML focus (no deep sequence modelling)
 
-Future extensions could include:
+Potential future extensions:
 
 - recurrent neural networks
 - transformer-based temporal modelling
 - uncertainty-aware prediction
-- richer athlete context features
+- richer athlete context modelling
+- probabilistic forecasting
+- sequence-aware progression modelling
 
 ---
 
@@ -321,21 +332,34 @@ Future extensions could include:
 
 This repository originated from an undergraduate dissertation research project investigating predictive modelling in competitive strength performance.
 
-Its current form has been engineered as a reproducible research software artifact.
+Its current form has since been engineered into a reproducible research software artifact suitable for:
+
+- publication-grade methodological evaluation
+- research engineering demonstration
+- machine learning portfolio presentation
+- methodological reproducibility case study
 
 ---
 
 ## Citation
 
-If this repository contributes to academic or applied work, citation guidance will be provided via `CITATION.cff`.
+If this repository contributes to academic or applied work, please cite using the metadata provided in:
+
+```text
+CITATION.cff
+```
 
 ---
 
 ## License
 
-License to be added.
+This project is licensed under the MIT License.
 
-Recommended: MIT License.
+See:
+
+```text
+LICENSE
+```
 
 ---
 
@@ -351,6 +375,7 @@ Machine Learning / Software Engineering
 This repository serves as:
 
 - research engineering portfolio work
-- reproducible ML experimentation artifact
+- reproducible machine learning experimentation
 - predictive modelling case study
 - temporal evaluation methodology demonstration
+- research software engineering showcase
