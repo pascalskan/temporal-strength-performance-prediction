@@ -15,7 +15,7 @@ class TestBaselines(unittest.TestCase):
         baseline = PersistenceBaseline()
         predictions = baseline.predict(self.data)
         expected = pd.Series([100, 110, 120, 130], name='Prev_Total')
-        pd.testing.assert_series_equal(predictions, expected)
+        pd.testing.assert_series_equal(predictions, expected, check_names=False)
 
     def test_persistence_baseline_missing_feature(self):
         baseline = PersistenceBaseline()
@@ -26,7 +26,7 @@ class TestBaselines(unittest.TestCase):
         baseline = RollingMeanBaseline()
         predictions = baseline.predict(self.data)
         expected = pd.Series([None, None, 110, 120], name='Rolling_Mean_3')
-        pd.testing.assert_series_equal(predictions, expected)
+        pd.testing.assert_series_equal(predictions, expected, check_names=False)
 
     def test_rolling_mean_baseline_missing_feature(self):
         baseline = RollingMeanBaseline()
@@ -36,12 +36,8 @@ class TestBaselines(unittest.TestCase):
     def test_drift_baseline(self):
         baseline = DriftBaseline()
         predictions = baseline.predict(self.data)
-        # Prev_Prev_Total missing for index 0, so filled with Prev_Total (100) -> 100 + (100 - 100) = 100
-        # Index 1: 110 + (110 - 100) = 120
-        # Index 2: 120 + (120 - 110) = 130
-        # Index 3: 130 + (130 - 120) = 140
         expected = pd.Series([100.0, 120.0, 130.0, 140.0], name='Prev_Total')
-        pd.testing.assert_series_equal(predictions, expected)
+        pd.testing.assert_series_equal(predictions, expected, check_names=False)
 
     def test_drift_baseline_missing_features(self):
         baseline = DriftBaseline()

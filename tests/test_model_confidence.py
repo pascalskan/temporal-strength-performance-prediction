@@ -4,6 +4,7 @@ import pytest
 
 from src.evaluation.statistics import compute_model_confidence_intervals
 
+
 @pytest.fixture
 def sample_predictions():
     # Two models, two athletes, two predictions each
@@ -15,6 +16,7 @@ def sample_predictions():
     }
     return pd.DataFrame(data)
 
+
 def test_ci_output_schema(sample_predictions):
     results = compute_model_confidence_intervals(sample_predictions, n_bootstraps=10, random_seed=42)
     
@@ -25,10 +27,12 @@ def test_ci_output_schema(sample_predictions):
     # 5 metrics for 2 models
     assert len(results) == 10 
 
+
 def test_ci_deterministic_reproducibility(sample_predictions):
     results1 = compute_model_confidence_intervals(sample_predictions, n_bootstraps=50, random_seed=42)
     results2 = compute_model_confidence_intervals(sample_predictions, n_bootstraps=50, random_seed=42)
     pd.testing.assert_frame_equal(results1, results2)
+
 
 def test_point_estimate_within_ci(sample_predictions):
     results = compute_model_confidence_intervals(sample_predictions, n_bootstraps=100, random_seed=42)
@@ -36,6 +40,7 @@ def test_point_estimate_within_ci(sample_predictions):
     for _, row in results.iterrows():
         if pd.notna(row['ci_lower']) and pd.notna(row['ci_upper']):
             assert row['ci_lower'] <= row['point_estimate'] <= row['ci_upper']
+
 
 def test_ci_synthetic_sanity_check():
     # A model with zero error should have zero width CI
@@ -60,6 +65,7 @@ def test_ci_synthetic_sanity_check():
             assert np.isclose(row['ci_lower'], 1.0)
             assert np.isclose(row['ci_upper'], 1.0)
             assert np.isclose(row['std_error'], 0)
+
 
 def test_ci_handles_no_athlete_id(sample_predictions):
     # Test that it runs without athlete_id (standard bootstrap)

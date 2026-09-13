@@ -59,7 +59,7 @@ def test_run_audit_calculations(tmp_path: Path):
     assert baseline['eligible_athletes'].iloc[0] == 4
     
     # Lag 1 (>=2 comps)
-    lag1 = attrition[attrition['feature_requirement'].str.contains('Lag 1\)')]
+    lag1 = attrition[attrition['feature_requirement'].str.contains('Lag 1)', regex=False)]
     assert lag1['eligible_athletes'].iloc[0] == 3
     assert lag1['attrition_from_baseline_percentage'].iloc[0] == pytest.approx(25.0) # 1 - (3/4) = 25% attrition
 

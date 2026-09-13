@@ -9,20 +9,24 @@ from src.evaluation.temporal_analysis import (
     run_and_save_temporal_analysis
 )
 
+
 @pytest.fixture
 def synthetic_temporal_data():
     # 5 forecast windows (years)
     years = [2018, 2019, 2020, 2021, 2022]
     data = []
     
+    # Use a fixed seed for the data generation itself to make tests more stable
+    rng = np.random.default_rng(42)
+    
     for i, year in enumerate(years):
         # Stable model: constant MAE of ~2.0
         y_true = np.linspace(10, 50, 20)
-        y_pred_stable = y_true + np.random.normal(0, 2, 20)
+        y_pred_stable = y_true + rng.normal(0, 2, 20)
         
         # Degrading model: MAE increases by ~1.0 each year
         noise_level = 2 + (i * 1.0)
-        y_pred_degrading = y_true + np.random.normal(0, noise_level, 20)
+        y_pred_degrading = y_true + rng.normal(0, noise_level, 20)
         
         for yt, yp_s, yp_d in zip(y_true, y_pred_stable, y_pred_degrading):
             data.append({
@@ -40,20 +44,22 @@ def synthetic_temporal_data():
             
     return pd.DataFrame(data)
 
+
 def test_compute_temporal_metrics_schema(synthetic_temporal_data):
     metrics_df = compute_temporal_metrics(synthetic_temporal_data)
     
     assert isinstance(metrics_df, pd.DataFrame)
-    expected_cols = ['model', 'forecast_window', 'prediction_count', 'MAE', 'RMSE', 'R2', 'sMAPE', 'NRMSE', 'mean_residual']
+    expected_cols = [
+        'model', 'forecast_window', 'prediction_count', 'MAE', 'RMSE', 
+        'R2', 'sMAPE', 'NRMSE', 'mean_residual'
+    ]
     assert all(col in metrics_df.columns for col in expected_cols)
     
     # 2 models * 5 windows = 10 rows
     assert len(metrics_df) == 10
 
+
 def test_estimate_temporal_drift_logic(synthetic_temporal_data):
-    # Set seed for reproducible synthetic generation in fixture
-    np.random.seed(42)
-    
     metrics_df = compute_temporal_metrics(synthetic_temporal_data)
     drift_df = estimate_temporal_drift(metrics_df)
     
@@ -67,6 +73,7 @@ def test_estimate_temporal_drift_logic(synthetic_temporal_data):
     
     # Degrading model should have positive MAE slope (error increasing)
     assert degrading_drift['MAE_slope'] > 0.5
+
 
 def test_run_and_save_temporal_analysis(synthetic_temporal_data, tmp_path):
     output_dir = Path(tmp_path)
