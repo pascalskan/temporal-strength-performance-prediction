@@ -8,73 +8,55 @@ from src.core.logging import get_logger
 logger = get_logger(__name__)
 
 
-def feature_engineering(df):
-    """
-    Create temporal and engineered features for athlete performance modelling.
+def feature_engineering(df, athlete_col="AthleteID"):
+    if athlete_col not in df.columns:
+        raise ValueError(
+            f"Missing required athlete identifier column: {athlete_col}"
+        )
 
-    Assumes input dataframe contains:
-    - Name
-    - Date
-    - TotalKg
-    - Age
-    - attempt columns
-    """
+    logger.info(
+        f"🔹 Starting feature engineering using athlete identifier: {athlete_col}..."
+    )
 
-    logger.info("🔹 Starting feature engineering...")
+    df = df.sort_values([athlete_col, "Date"]).copy()
 
-    df = df.sort_values(["Name", "Date"]).copy()
-
-    assert df.groupby("Name")["Date"].is_monotonic_increasing.all(), (
-        "❌ Data leakage risk: Dates are not strictly increasing per athlete"
+    assert df.groupby(athlete_col)["Date"].is_monotonic_increasing.all(), (
+        f"❌ Data leakage risk: Dates are not strictly increasing per {athlete_col}"
     )
 
     logger.info("🔸 Creating historical features...")
 
-    for step in tqdm(range(5), desc="Historical Features"):
-        if step == 0:
-            df["Prev_Total"] = df.groupby("Name")["TotalKg"].shift(1)
+    # Add Prev_Prev_Total for Drift Baseline
+    df["Prev_Prev_Total"] = df.groupby(athlete_col)["TotalKg"].shift(2)
+    df["Prev_Total"] = df.groupby(athlete_col)["TotalKg"].shift(1)
 
-        elif step == 1:
-            df["Rolling_Mean_3"] = (
-                df.groupby("Name")["TotalKg"]
-                .shift(1)
-                .rolling(3)
-                .mean()
-            )
+    # SCIENTIFIC FIX: Use group-safe transform and require full windows for rolling features
+    df["Rolling_Mean_3"] = df.groupby(athlete_col)["TotalKg"].transform(
+        lambda x: x.shift(1).rolling(3, min_periods=3).mean()
+    )
+    df["Rolling_Std_3"] = df.groupby(athlete_col)["TotalKg"].transform(
+        lambda x: x.shift(1).rolling(3, min_periods=3).std()
+    )
 
-        elif step == 2:
-            df["Rolling_Std_3"] = (
-                df.groupby("Name")["TotalKg"]
-                .shift(1)
-                .rolling(3)
-                .std()
-            )
+    df["Comp_Count"] = df.groupby(athlete_col).cumcount()
+    df["Days_Since_Last"] = df.groupby(athlete_col)["Date"].diff().dt.days
 
-        elif step == 3:
-            df["Comp_Count"] = df.groupby("Name").cumcount()
-
-        elif step == 4:
-            df["Days_Since_Last"] = (
-                df.groupby("Name")["Date"]
-                .diff()
-                .dt.days
-            )
-
-    df["PB"] = df.groupby("Name")["TotalKg"].shift(1).cummax()
+    # SCIENTIFIC FIX: Ensure PB is calculated per athlete
+    df["PB"] = df.groupby(athlete_col)["TotalKg"].transform(lambda x: x.shift(1).cummax())
 
     df["Peak_Distance"] = df["Prev_Total"] - df["PB"]
 
     logger.info("🔸 Creating progression features...")
 
     df["Improvement"] = (
-        df.groupby("Name")["TotalKg"].shift(1)
-        - df.groupby("Name")["TotalKg"].shift(2)
+        df.groupby(athlete_col)["TotalKg"].shift(1)
+        - df.groupby(athlete_col)["TotalKg"].shift(2)
     )
 
     df["Momentum"] = (
-        0.6 * df.groupby("Name")["TotalKg"].shift(1)
-        + 0.3 * df.groupby("Name")["TotalKg"].shift(2)
-        + 0.1 * df.groupby("Name")["TotalKg"].shift(3)
+        0.6 * df.groupby(athlete_col)["TotalKg"].shift(1)
+        + 0.3 * df.groupby(athlete_col)["TotalKg"].shift(2)
+        + 0.1 * df.groupby(athlete_col)["TotalKg"].shift(3)
     )
 
     logger.info("🔸 Creating consistency features...")
@@ -83,7 +65,7 @@ def feature_engineering(df):
 
     logger.info("🔸 Creating experience features...")
 
-    first_date = df.groupby("Name")["Date"].transform("min")
+    first_date = df.groupby(athlete_col)["Date"].transform("min")
 
     df["Career_Length_Days"] = (df["Date"] - first_date).dt.days
 

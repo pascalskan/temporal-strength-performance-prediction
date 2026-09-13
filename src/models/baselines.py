@@ -1,6 +1,6 @@
 from src.core.logging import get_logger
 from src.utils.metrics import compute_metrics
-
+import pandas as pd
 
 logger = get_logger(__name__)
 
@@ -34,3 +34,36 @@ def run_naive_baseline(df_model_no_attempts, yb_test, split_idx):
     logger.info("Naive Baseline: R2=%.4f", metrics.r2)
 
     return results
+
+class PersistenceBaseline:
+    def fit(self, X, y=None):
+        return self
+    def predict(self, X):
+        if 'Prev_Total' not in X.columns:
+            raise ValueError("PersistenceBaseline requires 'Prev_Total' feature.")
+        return X['Prev_Total']
+
+class RollingMeanBaseline:
+    def __init__(self, window=3):
+        self.window = window
+
+    def fit(self, X, y=None):
+        return self
+
+    def predict(self, X):
+        if 'Rolling_Mean_3' not in X.columns:
+            raise ValueError("RollingMeanBaseline requires 'Rolling_Mean_3' feature.")
+        return X['Rolling_Mean_3']
+
+class DriftBaseline:
+    def fit(self, X, y=None):
+        return self
+
+    def predict(self, X):
+        if 'Prev_Total' not in X.columns or 'Prev_Prev_Total' not in X.columns:
+            raise ValueError("DriftBaseline requires 'Prev_Total' and 'Prev_Prev_Total' features.")
+        
+        # Fill missing Prev_Prev_Total with Prev_Total to avoid NaN propagation
+        prev_prev_total = X['Prev_Prev_Total'].fillna(X['Prev_Total'])
+        
+        return X['Prev_Total'] + (X['Prev_Total'] - prev_prev_total)

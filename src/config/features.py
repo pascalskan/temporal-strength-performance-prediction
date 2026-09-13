@@ -4,11 +4,13 @@ BASELINE_FEATURES = [
     "BodyweightKg"
 ]
 
-ENGINEERED_FEATURES = [
+# Features safe for walk-forward forecasting (no future leakage)
+FORECAST_FEATURES = [
     "Sex",
     "Age",
     "BodyweightKg",
     "Prev_Total",
+    "Prev_Prev_Total", # Required for DriftBaseline
     "Rolling_Mean_3",
     "Rolling_Std_3",
     "Comp_Count",
@@ -21,6 +23,14 @@ ENGINEERED_FEATURES = [
     "Career_Length_Days",
     "Experience_Density",
     "Age_Squared"
+]
+
+# Engineered features may include current-event behaviour (which could leak if used in forecasting)
+ENGINEERED_FEATURES = FORECAST_FEATURES + [
+    "Success_Rate",
+    "Aggression",
+    "Clutch",
+    "Risk"
 ]
 
 ATTEMPT_COLUMNS = [
@@ -38,7 +48,6 @@ ATTEMPT_COLUMNS = [
 LEAKAGE_COLUMNS = [
     "Success_Rate",
     "Aggression",
-    
     "Clutch",
     "Risk"
 ]
