@@ -1,23 +1,59 @@
 import argparse
-import pandas as pd
-from src.data.loader import load_data
-from src.data.cleaning import clean_data, split_equipment_cohorts
-from src.core.logging import get_logger
-from src.io.paths import ProjectPaths
-from src.pipelines.retrospective_pipeline import run_pipeline
-from src.pipelines.forward_pipeline import run_forward_pipeline
-from src.pipelines.walk_forward_pipeline import run_walk_forward_pipeline
 
+from src.core.logging import get_logger
+from src.data.cleaning import clean_data, split_equipment_cohorts
+from src.data.loader import load_data
+from src.io.paths import ProjectPaths
+from src.pipelines.forward_pipeline import run_forward_pipeline
+from src.pipelines.retrospective_pipeline import run_pipeline
+from src.pipelines.walk_forward_pipeline import run_walk_forward_pipeline
 
 logger = get_logger(__name__)
 
+# Evaluation protocols, in the order they are reported. Each maps to the
+# function that runs it for a single cohort.
+STAGES = {
+    "retrospective": run_pipeline,
+    "forward": run_forward_pipeline,
+    "walk_forward": run_walk_forward_pipeline,
+}
+
+COHORTS = ("raw", "equipped")
+
 
 def main():
-    parser = argparse.ArgumentParser(description="Run the strength performance prediction pipeline.")
+    parser = argparse.ArgumentParser(
+        description="Run the strength performance prediction pipeline.",
+        epilog=(
+            "Stages and cohorts are selectable because a full production run takes\n"
+            "hours and its parts are independent. Walk-forward alone took ~50 min for\n"
+            "raw and ~2h for equipped, so regenerating one protocol should not require\n"
+            "recomputing the others. Examples:\n"
+            "  python main.py --stages retrospective forward\n"
+            "  python main.py --stages walk_forward --cohorts equipped"
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     parser.add_argument(
         "--test",
         action="store_true",
-        help="Run in test mode using the test fixture dataset.",
+        help="Run in test mode using the deterministic test fixture dataset.",
+    )
+    parser.add_argument(
+        "--stages",
+        nargs="+",
+        choices=list(STAGES),
+        default=list(STAGES),
+        metavar="STAGE",
+        help=f"Evaluation protocols to run: {', '.join(STAGES)} (default: all).",
+    )
+    parser.add_argument(
+        "--cohorts",
+        nargs="+",
+        choices=COHORTS,
+        default=list(COHORTS),
+        metavar="COHORT",
+        help=f"Equipment cohorts to run: {', '.join(COHORTS)} (default: all).",
     )
     args = parser.parse_args()
 
@@ -32,14 +68,13 @@ def main():
     # (or overwrite) the production results tree.
     dataset_path = ProjectPaths.use_dataset(dataset_filename)
     logger.info("Loading dataset from: %s", dataset_path)
-    
+
     df = load_data(dataset_path)
 
     logger.info("Cleaning data...")
     df = clean_data(df)
 
     logger.info("Splitting dataset into 'raw' and 'equipped' cohorts...")
-
     df_raw, df_equipped = split_equipment_cohorts(df)
 
     # The equipped cohort is Single-ply in all but name (Wraps contributes
@@ -47,25 +82,31 @@ def main():
     logger.info("Raw samples: %d", len(df_raw))
     logger.info("Equipped samples: %d", len(df_equipped))
 
-    logger.info("Running Retrospective Pipelines...")
-    if not df_raw.empty:
-        run_pipeline(df_raw, "raw")
-    if not df_equipped.empty:
-        run_pipeline(df_equipped, "equipped")
-    
-    logger.info("Running Forward Pipelines...")
-    if not df_raw.empty:
-        run_forward_pipeline(df_raw, "raw")
-    if not df_equipped.empty:
-        run_forward_pipeline(df_equipped, "equipped")
+    cohort_frames = {"raw": df_raw, "equipped": df_equipped}
 
-    logger.info("Running Walk-Forward Pipelines...")
-    if not df_raw.empty:
-        run_walk_forward_pipeline(df_raw, "raw")
-    if not df_equipped.empty:
-        run_walk_forward_pipeline(df_equipped, "equipped")
+    logger.info(
+        "Running stages [%s] for cohorts [%s]",
+        ", ".join(args.stages),
+        ", ".join(args.cohorts),
+    )
 
-    logger.info("All pipelines complete.")
+    for stage_name in args.stages:
+        run_stage = STAGES[stage_name]
+        logger.info("=== Stage: %s ===", stage_name)
+
+        for cohort_name in args.cohorts:
+            cohort_df = cohort_frames[cohort_name]
+
+            if cohort_df.empty:
+                logger.warning(
+                    "Cohort '%s' is empty; skipping %s.", cohort_name, stage_name
+                )
+                continue
+
+            logger.info("Running %s for cohort '%s'...", stage_name, cohort_name)
+            run_stage(cohort_df, cohort_name)
+
+    logger.info("All requested pipelines complete.")
 
 
 if __name__ == "__main__":
