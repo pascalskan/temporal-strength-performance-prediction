@@ -11,6 +11,7 @@ from src.io.paths import ProjectPaths
 
 logger = get_logger(__name__)
 
+
 def run_identity_audit(cleaned_df: pd.DataFrame, output_dir: Path):
     """
     Performs a forensic audit of the athlete identity construction to quantify collision risk.
@@ -42,7 +43,8 @@ def run_identity_audit(cleaned_df: pd.DataFrame, output_dir: Path):
     
     # A. High-History Suspicious Identities
     history_thresholds = [20, 30, 40, 50]
-    high_history_identities = competition_counts[competition_counts >= min(history_thresholds)].reset_index(name='competition_count')
+    high_history_mask = competition_counts >= min(history_thresholds)
+    high_history_identities = competition_counts[high_history_mask].reset_index(name='competition_count')
     high_history_identities.to_csv(output_dir / "suspicious_high_history_identities.csv", index=False)
 
     # B. Temporal Span Audit
@@ -65,9 +67,9 @@ def run_identity_audit(cleaned_df: pd.DataFrame, output_dir: Path):
     phys_stats['bw_range'] = phys_stats['bw_max'] - phys_stats['bw_min']
     phys_stats['span_years'] = (phys_stats['date_max'] - phys_stats['date_min']).dt.days / 365.25
     
-    # Age reversal/stagnation check
     phys_stats['age_progression_ok'] = phys_stats.apply(
-        lambda row: (row['age_max'] - row['age_min']) >= (row['span_years'] - 1) if row['span_years'] > 1 else True, axis=1
+        lambda row: (row['age_max'] - row['age_min']) >= (row['span_years'] - 1) if row['span_years'] > 1 else True, 
+        axis=1
     )
 
     suspicious_phys = phys_stats[
@@ -145,6 +147,7 @@ def run_identity_audit(cleaned_df: pd.DataFrame, output_dir: Path):
         plt.close()
 
     logger.info("Identity forensic audit complete.")
+
 
 if __name__ == '__main__':
     dataset_path = ProjectPaths.dataset_path("openpowerlifting.csv")

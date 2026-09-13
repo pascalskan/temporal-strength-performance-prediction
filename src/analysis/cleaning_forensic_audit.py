@@ -16,6 +16,7 @@ KEY_COLUMNS = [
     'WeightClassKg', 'Best3SquatKg', 'Best3BenchKg', 'Best3DeadliftKg'
 ]
 
+
 def run_cleaning_audit(raw_df: pd.DataFrame, output_dir: Path):
     """
     Performs a forensic audit of the cleaning pipeline to quantify missingness and attrition.
@@ -119,7 +120,10 @@ def run_cleaning_audit(raw_df: pd.DataFrame, output_dir: Path):
     # Overlap calculation
     # A and B = A + B - (A or B)
     # A or B = total removed
-    total_removed_by_rules = (raw_df[core_na_cols].isnull().any(axis=1) | (~raw_df["Equipment"].isin(VALID_EQUIPMENT))).sum()
+    total_removed_by_rules = (
+        raw_df[core_na_cols].isnull().any(axis=1) | 
+        (~raw_df["Equipment"].isin(VALID_EQUIPMENT))
+    ).sum()
     overlap = (na_removals_independent + equip_removals_independent) - total_removed_by_rules
 
     overlap_summary = pd.DataFrame([{
@@ -133,7 +137,7 @@ def run_cleaning_audit(raw_df: pd.DataFrame, output_dir: Path):
     }, {
         "rule": "Overlap (records failing both rules)",
         "independent_removals": overlap,
-        "sequential_removals": np.nan # Not applicable in sequential view
+        "sequential_removals": np.nan  # Not applicable in sequential view
     }])
     overlap_summary.to_csv(output_dir / "cleaning_rule_overlap_summary.csv", index=False)
     logger.info("Cleaning rule overlap summary saved.")
@@ -163,6 +167,7 @@ def run_cleaning_audit(raw_df: pd.DataFrame, output_dir: Path):
     plt.close()
     
     logger.info("Cleaning forensic audit complete.")
+
 
 if __name__ == '__main__':
     dataset_path = ProjectPaths.dataset_path("openpowerlifting.csv")
