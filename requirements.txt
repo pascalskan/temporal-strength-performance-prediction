@@ -1,6 +1,15 @@
+# Pinned exactly. Model output depends on library version -- scikit-learn
+# changes estimator internals between releases -- so an unpinned environment
+# cannot reproduce published results. These are the versions recorded in
+# run_metadata.json for the reported runs, under Python 3.12.
 pandas==2.2.2
 numpy==1.26.4
 scikit-learn==1.5.1
 matplotlib==3.9.0
 scipy==1.13.1
 tqdm==4.66.4
+
+# Test runner. Declared and pinned rather than installed ad-hoc in CI, so the
+# suite gating a change is the one run locally. Its absence previously left
+# run_metadata.json recording the pytest version as "unknown".
+pytest==8.3.5
