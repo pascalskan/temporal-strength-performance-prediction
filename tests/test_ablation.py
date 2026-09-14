@@ -140,9 +140,9 @@ def test_each_feature_set_gets_a_fresh_evaluator():
                 {"observation_id": "o1", "model": "m", "y_true": 1.0, "y_pred": 1.0}
             ]
 
-    def factory():
+    def factory(checkpoint_dir=None):
         evaluator = FakeEvaluator()
-        created.append(evaluator)
+        created.append((evaluator, checkpoint_dir))
         return evaluator
 
     feature_sets = {"a": ["Prev_Total"], "b": ["Prev_Total", "Age"]}
@@ -150,4 +150,57 @@ def test_each_feature_set_gets_a_fresh_evaluator():
                  lambda *a, **k: None, feature_sets)
 
     assert len(created) == 2
-    assert created[0] is not created[1]
+    assert created[0][0] is not created[1][0]
+
+
+def test_each_feature_set_checkpoints_to_its_own_directory(tmp_path):
+    """
+    The checkpoint fingerprint covers the feature set, so a shared directory
+    would make each configuration reject and delete the previous one's work,
+    leaving only the last one resumable -- the opposite of what is wanted from
+    a sequence of runs lasting hours.
+    """
+    seen = []
+
+    class FakeEvaluator:
+        def __init__(self):
+            self.prediction_results = []
+
+        def evaluate(self, df, fe, tf, feature_cols):
+            self.prediction_results = [
+                {"observation_id": "o1", "model": "m", "y_true": 1.0, "y_pred": 1.0}
+            ]
+
+    def factory(checkpoint_dir=None):
+        seen.append(checkpoint_dir)
+        return FakeEvaluator()
+
+    feature_sets = {"a": ["Prev_Total"], "b": ["Prev_Total", "Age"]}
+    run_ablation(pd.DataFrame({"x": [1]}), factory, lambda *a, **k: None,
+                 lambda *a, **k: None, feature_sets, checkpoint_root=tmp_path)
+
+    assert len(set(seen)) == 2, "feature sets must not share a checkpoint directory"
+    assert {p.name for p in seen} == {"a", "b"}
+
+
+def test_checkpointing_is_optional():
+    """Absent a root, no checkpoint directory is imposed on the evaluator."""
+    seen = []
+
+    class FakeEvaluator:
+        def __init__(self):
+            self.prediction_results = []
+
+        def evaluate(self, *args):
+            self.prediction_results = [
+                {"observation_id": "o1", "model": "m", "y_true": 1.0, "y_pred": 1.0}
+            ]
+
+    def factory(checkpoint_dir=None):
+        seen.append(checkpoint_dir)
+        return FakeEvaluator()
+
+    run_ablation(pd.DataFrame({"x": [1]}), factory, lambda *a, **k: None,
+                 lambda *a, **k: None, {"a": ["Prev_Total"]})
+
+    assert seen == [None]

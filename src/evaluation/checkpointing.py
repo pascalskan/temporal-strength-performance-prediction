@@ -27,6 +27,7 @@ They should not be loaded from an untrusted source.
 """
 import json
 import re
+import subprocess
 from pathlib import Path
 from typing import List, Set
 
@@ -183,18 +184,49 @@ class WalkForwardCheckpoint:
 
 
 def build_fingerprint(feature_cols: List[str], model_names: List[str],
-                      granularity: str, min_train_periods: int) -> str:
+                      granularity: str, min_train_periods: int,
+                      code_version: str = None) -> str:
     """
     Identify the configuration a checkpoint belongs to.
 
     Everything that changes what a fold computes is included. Resuming across a
     change to any of these would combine folds computed under different
     experimental conditions into one result set.
+
+    The code version is part of that. Configuration alone is not sufficient: a
+    correction to feature engineering, or to any model internals, changes what
+    a fold computes while leaving the feature set, model names and protocol
+    settings identical. A checkpoint keyed only on configuration would then be
+    accepted after the fix and silently serve pre-fix predictions -- a
+    reproducibility failure that no output would reveal. Keying on the commit
+    means a code change invalidates checkpoints, which is the correct trade:
+    resuming across a code change is precisely what should not happen.
     """
     parts = [
         "features=" + ",".join(sorted(feature_cols)),
         "models=" + ",".join(sorted(model_names)),
         f"granularity={granularity}",
         f"min_train_periods={min_train_periods}",
+        f"code={code_version if code_version is not None else _current_code_version()}",
     ]
     return "|".join(parts)
+
+
+def _current_code_version() -> str:
+    """
+    Commit of the working tree, or 'unknown' outside a repository.
+
+    A dirty tree is marked, because uncommitted edits change behaviour while
+    leaving the commit unchanged; treating those as resumable would reintroduce
+    exactly the problem the commit is here to prevent.
+    """
+    try:
+        commit = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], stderr=subprocess.DEVNULL, text=True
+        ).strip()
+        dirty = subprocess.check_output(
+            ["git", "status", "--porcelain"], stderr=subprocess.DEVNULL, text=True
+        ).strip()
+        return f"{commit}{'-dirty' if dirty else ''}"
+    except Exception:
+        return "unknown"

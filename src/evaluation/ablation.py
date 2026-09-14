@@ -64,19 +64,25 @@ def run_ablation(
     feature_engineering_fn: Callable,
     target_fn: Callable,
     feature_sets: Dict[str, List[str]] = None,
+    checkpoint_root: Path = None,
 ) -> pd.DataFrame:
     """
     Run one full walk-forward evaluation per feature set.
 
     Args:
         df: Cohort data, uncleaned and unengineered.
-        evaluator_factory: Zero-argument callable returning a fresh evaluator.
+        evaluator_factory: Callable taking a checkpoint directory and returning
+            a fresh evaluator.
             A factory rather than an instance because each configuration needs
             unfitted models and empty result accumulators; reusing one
             evaluator would pool predictions across configurations.
         feature_engineering_fn: Fold-local feature construction.
         target_fn: Fold-local target construction.
         feature_sets: Overrides the default configurations.
+        checkpoint_root: Enables resume. Each feature set is given its own
+            subdirectory: the checkpoint fingerprint covers the feature set, so
+            a shared directory would make every configuration reject and delete
+            the previous one's work, leaving only the last resumable.
 
     Returns:
         Pooled metrics for every model under every feature set.
@@ -94,7 +100,11 @@ def run_ablation(
             set_name, len(feature_cols),
         )
 
-        evaluator = evaluator_factory()
+        checkpoint_dir = (
+            Path(checkpoint_root) / set_name if checkpoint_root is not None else None
+        )
+
+        evaluator = evaluator_factory(checkpoint_dir)
         evaluator.evaluate(df, feature_engineering_fn, target_fn, feature_cols)
 
         if not evaluator.prediction_results:
@@ -103,6 +113,12 @@ def run_ablation(
 
         predictions = pd.DataFrame(evaluator.prediction_results)
         metrics = compute_global_forecast_metrics(predictions)
+
+        # This configuration is finished and its metrics are in hand, so its
+        # working checkpoint has no further use. The ablation does not go
+        # through save_results, which is where walk-forward clears its own.
+        if getattr(evaluator, "checkpoint", None) is not None:
+            evaluator.checkpoint.clear()
         metrics.insert(0, "feature_set", set_name)
         metrics.insert(1, "n_features", len(feature_cols))
         metrics["features"] = ", ".join(feature_cols)
@@ -194,7 +210,11 @@ def run_and_save_ablation(
     output_dir.mkdir(parents=True, exist_ok=True)
 
     metrics = run_ablation(
-        df, evaluator_factory, feature_engineering_fn, target_fn, feature_sets
+        df, evaluator_factory, feature_engineering_fn, target_fn, feature_sets,
+        # An ablation is several walk-forward runs back to back -- around eight
+        # hours for the equipped cohort -- so an unresumable failure late in the
+        # sequence discards the entire night.
+        checkpoint_root=output_dir / "checkpoints",
     )
 
     if metrics.empty:

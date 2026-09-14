@@ -27,7 +27,7 @@ from src.reproducibility.metadata import save_metadata
 logger = get_logger(__name__)
 
 
-def build_evaluator() -> WalkForwardEvaluator:
+def build_evaluator(checkpoint_dir=None) -> WalkForwardEvaluator:
     """
     A fresh evaluator with unfitted models and empty accumulators.
 
@@ -48,6 +48,7 @@ def build_evaluator() -> WalkForwardEvaluator:
         baselines=build_temporal_baselines(),
         granularity=WALK_FORWARD_GRANULARITY,
         min_train_periods=MIN_TRAIN_PERIODS,
+        checkpoint_dir=checkpoint_dir,
     )
 
 
