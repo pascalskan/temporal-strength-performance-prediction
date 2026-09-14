@@ -15,6 +15,7 @@ from src.models.baselines import (
     PersistenceBaseline,
     RollingMeanBaseline,
 )
+from src.models.traditional_baselines import BrzyckiBaseline, EpleyBaseline
 from src.reproducibility.environment import capture_experiment_metadata
 from src.reproducibility.metadata import save_metadata
 
@@ -122,6 +123,15 @@ def run_walk_forward_pipeline(df, group_name):
         "Persistence": PersistenceBaseline(),
         "Rolling Mean": RollingMeanBaseline(),
         "Drift": DriftBaseline(),
+        # Traditional 1RM equations, previously available to the retrospective
+        # and forward protocols but not to this one -- so the primary
+        # methodology could not compare against the methods the study set out
+        # to assess. They score only competitions with recorded attempts
+        # (62.7% of raw, 30.4% of equipped), so their pooled metrics cover a
+        # different subpopulation; matched_subset/ holds the like-for-like
+        # comparison.
+        "Epley": EpleyBaseline(),
+        "Brzycki": BrzyckiBaseline(),
     }
 
     # ------------------------------------------------------------------
@@ -153,6 +163,8 @@ def run_walk_forward_pipeline(df, group_name):
     # ------------------------------------------------------------------
 
     comparisons = [
+        ("Rolling Mean", "Brzycki"),
+        ("Gradient Boosting", "Brzycki"),
         ("Rolling Mean", "Gradient Boosting"),
         ("Rolling Mean", "Ridge"),
         ("Rolling Mean", "Random Forest"),

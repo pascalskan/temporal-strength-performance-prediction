@@ -9,6 +9,7 @@ from src.evaluation.metrics import compute_global_forecast_metrics
 from src.evaluation.statistics import run_all_comparisons, compute_model_confidence_intervals
 from src.evaluation.diagnostics import run_and_save_diagnostics
 from src.evaluation.temporal_analysis import run_and_save_temporal_analysis
+from src.evaluation.matched_subset import run_and_save_matched_subset
 from src.models.baselines import PersistenceBaseline, RollingMeanBaseline, DriftBaseline
 from src.data.identity import build_athlete_id
 
@@ -145,20 +146,52 @@ class WalkForwardEvaluator:
         all_estimators = {**self.baselines, **self.models}
         
         for model_name, model in all_estimators.items():
-            model.fit(X_train, y_train)
-            preds = model.predict(X_test)
-            
-            metrics = compute_metrics(y_test, pd.Series(preds, index=y_test.index))
-            
-            self.metrics_results.append({
-                "forecast_window": forecast_window,
-                "model": model_name,
-                "MAE": metrics.mae,
-                "RMSE": metrics.rmse,
-                "R2": metrics.r2,
-                "n_samples": len(y_test)
-            })
-            
+            # Estimators declaring requires_frame read columns outside the
+            # forecasting feature set: the traditional equations need raw
+            # attempt loads, which are deliberately withheld from the machine
+            # learning models. They receive the frame itself; every other
+            # estimator sees only feature_cols, so what each model is given
+            # stays explicit.
+            needs_frame = getattr(model, "requires_frame", False)
+
+            model.fit(train_clean if needs_frame else X_train, y_train)
+            preds = pd.Series(
+                model.predict(test_clean if needs_frame else X_test),
+                index=y_test.index,
+            )
+
+            # A traditional equation yields NaN where a competition recorded no
+            # usable attempts. Those rows are kept as NaN rather than imputed,
+            # so the model is scored only on the subpopulation it can address.
+            # Pooled metrics downstream already mask NaN per model.
+            scored = preds.notna() & y_test.notna()
+
+            if scored.any():
+                metrics = compute_metrics(y_test[scored], preds[scored])
+
+                self.metrics_results.append({
+                    "forecast_window": forecast_window,
+                    "model": model_name,
+                    "MAE": metrics.mae,
+                    "RMSE": metrics.rmse,
+                    "R2": metrics.r2,
+                    "n_samples": int(scored.sum()),
+                    # Recorded separately so a model scored on a subset is
+                    # visible in the per-window output rather than silently
+                    # comparable.
+                    "n_eligible": len(y_test),
+                })
+            else:
+                logger.warning(
+                    "Model '%s' produced no scorable predictions for window %s; "
+                    "no window metrics recorded.",
+                    model_name, forecast_window,
+                )
+
+            # Predictions are recorded regardless, including the NaN ones. A
+            # model absent from a window entirely would understate its own
+            # denominator, making coverage look better than it is.
+
             for idx, pred in zip(y_test.index, preds):
                 self.prediction_results.append({
                     "observation_id": test_clean.loc[idx, "observation_id"],
@@ -200,6 +233,12 @@ class WalkForwardEvaluator:
             temporal_dir = output_dir / "temporal_analysis"
             run_and_save_temporal_analysis(df_predictions, temporal_dir)
             logger.info(f"Saved temporal analysis plots and metrics to {temporal_dir}")
+
+            # Like-for-like comparison restricted to observations every model
+            # could score. Traditional equations cover only the subpopulation
+            # with recorded attempts, so pooled metrics above are not directly
+            # comparable across all models.
+            run_and_save_matched_subset(df_predictions, output_dir / "matched_subset")
             
         if self.metrics_results:
             df_metrics = pd.DataFrame(self.metrics_results)

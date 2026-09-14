@@ -3,7 +3,10 @@ import numpy as np
 from pathlib import Path
 from sklearn.linear_model import LinearRegression
 import matplotlib.pyplot as plt
+from src.core.logging import get_logger
 from src.models.utils import get_model_attribute
+
+logger = get_logger(__name__)
 
 def compute_diagnostic_metrics(y_true: np.ndarray, y_pred: np.ndarray) -> dict:
     """
@@ -80,8 +83,23 @@ def run_and_save_diagnostics(predictions_df: pd.DataFrame, output_dir: Path):
     decile_results = []
     
     for model_name, group in predictions_df.groupby('model'):
-        y_true = group['y_true'].values
-        y_pred = group['y_pred'].values
+        # Models that cannot address every observation record NaN rather than
+        # imputing -- the traditional equations need attempt data that is often
+        # absent. Drop those pairs so each model is diagnosed on the
+        # subpopulation it actually predicted; the calibration regression
+        # rejects NaN outright.
+        scorable = group['y_pred'].notna() & group['y_true'].notna()
+
+        if not scorable.any():
+            logger.warning(
+                "Model '%s' has no scorable predictions; skipping diagnostics.",
+                model_name,
+            )
+            continue
+
+        scored = group[scorable]
+        y_true = scored['y_true'].values
+        y_pred = scored['y_pred'].values
         
         # Scalar diagnostics
         scalar_metrics = compute_diagnostic_metrics(y_true, y_pred)
