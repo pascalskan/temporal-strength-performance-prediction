@@ -8,11 +8,13 @@ from src.config.experiment import (
     WALK_FORWARD_GRANULARITY,
     build_all_baselines,
     build_models,
+    build_tuned_models,
 )
 from src.core.logging import get_logger
 from src.evaluation.walk_forward import WalkForwardEvaluator
 from src.features.temporal import feature_engineering
 from src.io.paths import ProjectPaths
+from src.models.tuned import collect_selection_history
 from src.reproducibility.environment import capture_experiment_metadata
 from src.reproducibility.metadata import save_metadata
 
@@ -36,9 +38,18 @@ def create_walk_forward_target(df, athlete_col="Athlete_ID"):
     return df
 
 
-def run_walk_forward_pipeline(df, group_name):
+def run_walk_forward_pipeline(df, group_name, tuned: bool = False):
     """
-    Runs the publication-grade expanding-window walk-forward forecasting pipeline.
+    Runs the expanding-window walk-forward forecasting pipeline.
+
+    Args:
+        df: Cohort data, uncleaned and unengineered.
+        group_name: Equipment cohort being evaluated.
+        tuned: Select hyperparameters within each fold's training window rather
+            than using fixed values. Writes to a separate directory so both
+            variants coexist: the difference between them is what measures
+            whether tuning changes the conclusion, which is not something to
+            assert in either direction without evidence.
     """
 
     start_time = time.time()
@@ -62,7 +73,7 @@ def run_walk_forward_pipeline(df, group_name):
 
     base_dir = (
         ProjectPaths.forward_group_dir(group_name)
-        / "walk_forward"
+        / ("walk_forward_tuned" if tuned else "walk_forward")
     )
 
     base_dir.mkdir(parents=True, exist_ok=True)
@@ -79,7 +90,7 @@ def run_walk_forward_pipeline(df, group_name):
     metadata = capture_experiment_metadata(
         df=df,
         cohort=group_name,
-        execution_mode="walk_forward",
+        execution_mode="walk_forward_tuned" if tuned else "walk_forward",
         random_seed=42,
     )
 
@@ -96,8 +107,14 @@ def run_walk_forward_pipeline(df, group_name):
     # src/config/experiment.py, so the ablation stage evaluates exactly the
     # same models as the headline run rather than a parallel definition that
     # can drift out of step.
-    models = build_models()
+    models = build_tuned_models() if tuned else build_models()
     baselines = build_all_baselines()
+
+    if tuned:
+        logger.info(
+            "Hyperparameters will be selected within each fold's training "
+            "window by forward-chaining search."
+        )
 
     evaluator = WalkForwardEvaluator(
         models=models,
@@ -135,6 +152,16 @@ def run_walk_forward_pipeline(df, group_name):
         base_dir,
         comparisons=comparisons,
     )
+
+    if tuned:
+        # Whether the optimum moves as the training window grows is a result in
+        # its own right: a drifting optimum indicates the data-generating
+        # process is not stable, which every forecast here assumes.
+        selection = collect_selection_history(models)
+        if not selection.empty:
+            selection_path = base_dir / "hyperparameter_selection.csv"
+            selection.to_csv(selection_path, index=False)
+            logger.info("Saved hyperparameter selection history to %s", selection_path)
 
     logger.info(
         "Walk-forward pipeline completed in %.2f seconds",

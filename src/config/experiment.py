@@ -110,6 +110,74 @@ def build_all_baselines() -> Dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
+# Hyperparameter search (walk-forward tuned variant)
+# ---------------------------------------------------------------------------
+
+# Grids are deliberately small. Cost multiplies by grid size times inner folds
+# at every selection point across an expanding window, and the purpose here is
+# to establish whether tuning changes the conclusion -- not to find a global
+# optimum. A grid that cannot finish is worth less than a modest one that does.
+#
+# Each spans the axis that most affects capacity for its model family, bracketing
+# the fixed default so the search can move in either direction.
+RANDOM_FOREST_GRID = {
+    "max_depth": [10, 20, None],
+    "min_samples_leaf": [1, 5],
+}
+
+GRADIENT_BOOSTING_GRID = {
+    "learning_rate": [0.05, 0.1],
+    "max_depth": [2, 3, 4],
+}
+
+RIDGE_GRID = {
+    "ridge__alpha": [0.1, 1.0, 10.0, 100.0],
+}
+
+# Folds between full searches; in between, the last selection is carried
+# forward. See src/models/tuned.py for why this is periodic rather than
+# per-fold.
+RETUNE_EVERY_N_FOLDS = 5
+
+
+def build_tuned_models() -> Dict[str, Any]:
+    """
+    The learned models, each selecting its own hyperparameters within the
+    training window of the fold it is fitted on.
+
+    Linear Regression is excluded: it has nothing to tune, so wrapping it would
+    add cost and an empty selection history for no gain. It still appears in
+    the tuned run via the untuned model set, unchanged.
+    """
+    from src.models.tuned import PeriodicallyTunedRegressor
+
+    return {
+        "Linear Regression": LinearRegression(),
+        "Ridge": PeriodicallyTunedRegressor(
+            estimator=Pipeline([
+                ("scaler", StandardScaler()),
+                ("ridge", Ridge(**RIDGE_PARAMS)),
+            ]),
+            param_grid=RIDGE_GRID,
+            retune_every=RETUNE_EVERY_N_FOLDS,
+            name="Ridge",
+        ),
+        "Random Forest": PeriodicallyTunedRegressor(
+            estimator=RandomForestRegressor(**RANDOM_FOREST_PARAMS),
+            param_grid=RANDOM_FOREST_GRID,
+            retune_every=RETUNE_EVERY_N_FOLDS,
+            name="Random Forest",
+        ),
+        "Gradient Boosting": PeriodicallyTunedRegressor(
+            estimator=GradientBoostingRegressor(**GRADIENT_BOOSTING_PARAMS),
+            param_grid=GRADIENT_BOOSTING_GRID,
+            retune_every=RETUNE_EVERY_N_FOLDS,
+            name="Gradient Boosting",
+        ),
+    }
+
+
+# ---------------------------------------------------------------------------
 # Statistical comparison
 # ---------------------------------------------------------------------------
 
@@ -138,9 +206,13 @@ MODEL_COMPARISONS: List[Tuple[str, str]] = [
 # ---------------------------------------------------------------------------
 
 TUNING_ASYMMETRY_NOTE = """
-Hyperparameters are fixed in the walk-forward and forward protocols, while the
-standalone retrospective pipeline tunes via grid search. That asymmetry is
-deliberate but bounded, and matters when reading the tables:
+The walk_forward stage uses fixed hyperparameters; walk_forward_tuned selects
+them within each fold's training window by forward-chaining search. Running
+both is the point: the difference between them measures what tuning is worth
+under this protocol, rather than leaving it to be asserted either way.
+
+The standalone retrospective pipeline also tunes. That asymmetry is deliberate
+but bounded, and matters when reading the tables:
 
   - The headline protocol contrast (forward/metrics_retro.csv against
     forward/metrics.csv) is unaffected. Both arms are built from the same

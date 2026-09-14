@@ -24,6 +24,13 @@ STAGES = {
     "retrospective": run_pipeline,
     "forward": run_forward_pipeline,
     "walk_forward": run_walk_forward_pipeline,
+    # Selects hyperparameters inside every fold, so it costs several times a
+    # plain walk-forward run. Excluded from DEFAULT_STAGES and requested
+    # explicitly; run alongside walk_forward, since the comparison between the
+    # two is the point.
+    "walk_forward_tuned": lambda df, cohort: run_walk_forward_pipeline(
+        df, cohort, tuned=True
+    ),
     # Costs one full walk-forward run per feature set, so it is excluded from
     # DEFAULT_STAGES and must be requested explicitly.
     "ablation": run_ablation_pipeline,
