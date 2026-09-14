@@ -3,37 +3,50 @@ from pathlib import Path
 import pandas as pd
 
 
-def save_forward_metrics(
-    base_dir,
-    mae_lr,
-    rmse_lr,
-    r2_lr,
-    mae_rf,
-    rmse_rf,
-    r2_rf,
-    mae_gb,
-    rmse_gb,
-    r2_gb,
-    mae_e,
-    rmse_e,
-    r2_e,
-    mae_b,
-    rmse_b,
-    r2_b
-):
-    base_dir = Path(base_dir)
-    results_df = pd.DataFrame([
-        {"Model": "Linear Regression", "MAE": mae_lr, "RMSE": rmse_lr, "R2": r2_lr},
-        {"Model": "Random Forest", "MAE": mae_rf, "RMSE": rmse_rf, "R2": r2_rf},
-        {"Model": "Gradient Boosting", "MAE": mae_gb, "RMSE": rmse_gb, "R2": r2_gb},
-        {"Model": "Epley", "MAE": mae_e, "RMSE": rmse_e, "R2": r2_e},
-        {"Model": "Brzycki", "MAE": mae_b, "RMSE": rmse_b, "R2": r2_b},
-    ])
+def save_forward_metrics(base_dir, forward_results, traditional_metrics):
+    """
+    Write the forward-protocol metrics table.
 
-    results_df.to_csv(
-        base_dir / "metrics.csv",
-        index=False
-    )
+    Every row carries the number of observations it was scored on. The
+    traditional equations cover only competitions with recorded attempts, so
+    without that column the table silently compares models measured on
+    different populations -- see metrics_matched_subset.csv for the
+    like-for-like comparison.
+    """
+    base_dir = Path(base_dir)
+
+    n_learned = len(forward_results.y_pred_lr)
+
+    rows = [
+        {"Model": "Linear Regression",
+         "MAE": forward_results.linear_regression.metrics.mae,
+         "RMSE": forward_results.linear_regression.metrics.rmse,
+         "R2": forward_results.linear_regression.metrics.r2,
+         "n_scored": n_learned, "coverage": 1.0},
+        {"Model": "Random Forest",
+         "MAE": forward_results.random_forest.metrics.mae,
+         "RMSE": forward_results.random_forest.metrics.rmse,
+         "R2": forward_results.random_forest.metrics.r2,
+         "n_scored": n_learned, "coverage": 1.0},
+        {"Model": "Gradient Boosting",
+         "MAE": forward_results.gradient_boosting.metrics.mae,
+         "RMSE": forward_results.gradient_boosting.metrics.rmse,
+         "R2": forward_results.gradient_boosting.metrics.r2,
+         "n_scored": n_learned, "coverage": 1.0},
+    ]
+
+    for name in ("Epley", "Brzycki"):
+        entry = traditional_metrics[name]
+        rows.append({
+            "Model": name,
+            "MAE": entry["MAE"],
+            "RMSE": entry["RMSE"],
+            "R2": entry["R2"],
+            "n_scored": entry.get("n_scored"),
+            "coverage": entry.get("coverage"),
+        })
+
+    pd.DataFrame(rows).to_csv(base_dir / "metrics.csv", index=False)
 
 
 def save_retrospective_metrics(

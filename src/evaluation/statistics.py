@@ -2,7 +2,10 @@ import pandas as pd
 import numpy as np
 from typing import Tuple, Dict, List, Optional
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from src.core.logging import get_logger
 from src.evaluation.metrics import symmetric_mean_absolute_percentage_error, normalized_root_mean_squared_error
+
+logger = get_logger(__name__)
 
 def paired_bootstrap_comparison(
     predictions_df: pd.DataFrame,
@@ -159,7 +162,79 @@ def run_all_comparisons(
                 'metric': metric,
                 **result
             })
-    return pd.DataFrame(results)
+
+    comparisons_df = pd.DataFrame(results)
+
+    if comparisons_df.empty:
+        return comparisons_df
+
+    # Correct for multiplicity. Every pair is tested on two metrics, so a
+    # default configuration reports fourteen tests; at alpha = 0.05 the chance
+    # of at least one spurious rejection across that family approaches one in
+    # two. Raw p-values are retained alongside the adjusted ones so the
+    # adjustment is visible rather than applied silently.
+    comparisons_df = add_multiplicity_correction(comparisons_df)
+
+    return comparisons_df
+
+
+def holm_bonferroni(p_values: np.ndarray) -> np.ndarray:
+    """
+    Holm-Bonferroni step-down adjusted p-values.
+
+    Controls the family-wise error rate without assuming the tests are
+    independent, which matters here: the comparisons share a common reference
+    model and are computed from the same predictions, so they are strongly
+    dependent. Uniformly more powerful than Bonferroni and valid under
+    arbitrary dependence, unlike Benjamini-Hochberg in its unmodified form.
+    """
+    p_values = np.asarray(p_values, dtype=float)
+    n = len(p_values)
+
+    order = np.argsort(p_values)
+    adjusted = np.empty(n, dtype=float)
+
+    running_max = 0.0
+    for rank, index in enumerate(order):
+        candidate = (n - rank) * p_values[index]
+        # Step-down enforces monotonicity: an adjusted p-value may never fall
+        # below one assigned to a smaller raw p-value.
+        running_max = max(running_max, candidate)
+        adjusted[index] = min(1.0, running_max)
+
+    return adjusted
+
+
+def add_multiplicity_correction(
+    comparisons_df: pd.DataFrame,
+    alpha: float = 0.05,
+    p_column: str = "bootstrap_p",
+) -> pd.DataFrame:
+    """
+    Annotate a comparison table with family-wise error control.
+
+    The family is every test in the table. Adding columns rather than filtering
+    keeps the unadjusted values available, since which comparisons were run is
+    itself part of what a reader needs in order to judge the adjustment.
+    """
+    annotated = comparisons_df.copy()
+
+    annotated["p_adjusted_holm"] = holm_bonferroni(annotated[p_column].to_numpy())
+    annotated["significant_unadjusted"] = annotated[p_column] < alpha
+    annotated["significant_adjusted"] = annotated["p_adjusted_holm"] < alpha
+    annotated["n_tests_in_family"] = len(annotated)
+
+    lost = int(
+        (annotated["significant_unadjusted"] & ~annotated["significant_adjusted"]).sum()
+    )
+    if lost:
+        logger.info(
+            "%d of %d comparisons significant at alpha=%.2f unadjusted no longer "
+            "reach significance after Holm correction.",
+            lost, len(annotated), alpha,
+        )
+
+    return annotated
 
 def _weighted_median(sorted_values: np.ndarray, weights: np.ndarray) -> float:
     """

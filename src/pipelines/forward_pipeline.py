@@ -1,7 +1,10 @@
 import time
+
+import pandas as pd
 from src.data.identity import build_athlete_id
 from src.features.temporal import feature_engineering
 from src.utils.splitting import time_aware_split
+from src.evaluation.forward_matched import save_matched_forward_metrics
 from src.evaluation.forward_reporting import save_forward_metrics, save_forward_predictions, save_retrospective_metrics, save_traditional_predictions
 from src.models.forward_training import train_forward_models, train_retrospective_reference_models
 from src.models.forward_traditional import run_forward_traditional_predictions
@@ -77,16 +80,27 @@ def run_forward_pipeline(df, group_name):
     forward_results = train_forward_models(X_train, X_test, y_train, y_test)
 
     logger.info("Running traditional methods for forward prediction...")
-    actual_next, epley_preds, brzycki_preds, traditional_metrics = run_forward_traditional_predictions(df_model, y_test.index)
+    (actual_next, epley_preds, brzycki_preds,
+     traditional_metrics, traditional_index) = run_forward_traditional_predictions(
+        df_model, y_test.index
+    )
 
     logger.info("Saving all metrics and predictions...")
-    save_forward_metrics(
-        base_dir,
-        forward_results.linear_regression.metrics.mae, forward_results.linear_regression.metrics.rmse, forward_results.linear_regression.metrics.r2,
-        forward_results.random_forest.metrics.mae, forward_results.random_forest.metrics.rmse, forward_results.random_forest.metrics.r2,
-        forward_results.gradient_boosting.metrics.mae, forward_results.gradient_boosting.metrics.rmse, forward_results.gradient_boosting.metrics.r2,
-        traditional_metrics["Epley"]["MAE"], traditional_metrics["Epley"]["RMSE"], traditional_metrics["Epley"]["R2"],
-        traditional_metrics["Brzycki"]["MAE"], traditional_metrics["Brzycki"]["RMSE"], traditional_metrics["Brzycki"]["R2"]
+    save_forward_metrics(base_dir, forward_results, traditional_metrics)
+
+    # Re-score every model over the observations the traditional equations
+    # could address, so the comparison against them is made on shared data.
+    save_matched_forward_metrics(
+        model_predictions={
+            "Linear Regression": forward_results.y_pred_lr,
+            "Random Forest": forward_results.y_pred_rf,
+            "Gradient Boosting": forward_results.y_pred_gb,
+            "Epley": pd.Series(epley_preds, index=traditional_index).reindex(y_test.index),
+            "Brzycki": pd.Series(brzycki_preds, index=traditional_index).reindex(y_test.index),
+        },
+        y_test=y_test,
+        scored_index=traditional_index,
+        base_dir=base_dir,
     )
     save_retrospective_metrics(
         base_dir,

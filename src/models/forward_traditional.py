@@ -35,11 +35,26 @@ def estimate_1rm_forward(weight, rpe, formula="epley"):
 
 
 def run_forward_traditional_predictions(df_model, test_indices):
+    """
+    Score the traditional equations over the forward test set.
+
+    An estimate requires at least one recorded attempt in each of the three
+    lifts, which is absent for a large and non-random share of competitions.
+    Rows without them are skipped, so these metrics describe a subpopulation
+    rather than the full test set.
+
+    Returns the indices actually scored alongside the predictions, so callers
+    can restrict the other models to the same observations. Without that, the
+    traditional and learned figures sit in one table describing different
+    populations, which is how a traditional equation came to appear ahead of
+    gradient boosting by an order of magnitude more than it is.
+    """
     epley_preds = []
     brzycki_preds = []
     actual_next = []
+    scored_indices = []
 
-    for _, row in df_model.loc[test_indices].iterrows():
+    for index, row in df_model.loc[test_indices].iterrows():
 
         squat_vals = [
             estimate_1rm_forward(row.get("Squat1Kg"), 7, "epley"),
@@ -96,6 +111,7 @@ def run_forward_traditional_predictions(df_model, test_indices):
             epley_preds.append(total_epley)
             brzycki_preds.append(total_brzycki)
             actual_next.append(row["Target_Total"])
+            scored_indices.append(index)
 
     actual_next = np.array(actual_next)
     epley_preds = np.array(epley_preds)
@@ -107,17 +123,33 @@ def run_forward_traditional_predictions(df_model, test_indices):
     logger.info("Epley (Forward Improved): MAE=%.2f, RMSE=%.2f, R2=%.3f", metrics_e.mae, metrics_e.rmse, metrics_e.r2)
     logger.info("Brzycki (Forward Improved): MAE=%.2f, RMSE=%.2f, R2=%.3f", metrics_b.mae, metrics_b.rmse, metrics_b.r2)
 
+    n_scored = len(actual_next)
+    n_eligible = len(test_indices)
+    coverage = n_scored / n_eligible if n_eligible else 0.0
+
+    logger.info(
+        "Traditional equations scored %d of %d forward observations (%.1f%%); "
+        "their metrics describe that subpopulation only.",
+        n_scored, n_eligible, 100 * coverage,
+    )
+
     metrics = {
         "Epley": {
             "MAE": metrics_e.mae,
             "RMSE": metrics_e.rmse,
-            "R2": metrics_e.r2
+            "R2": metrics_e.r2,
+            "n_scored": n_scored,
+            "n_eligible": n_eligible,
+            "coverage": coverage,
         },
         "Brzycki": {
             "MAE": metrics_b.mae,
             "RMSE": metrics_b.rmse,
-            "R2": metrics_b.r2
+            "R2": metrics_b.r2,
+            "n_scored": n_scored,
+            "n_eligible": n_eligible,
+            "coverage": coverage,
         }
     }
 
-    return actual_next, epley_preds, brzycki_preds, metrics
+    return actual_next, epley_preds, brzycki_preds, metrics, pd.Index(scored_indices)

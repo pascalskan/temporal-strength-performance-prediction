@@ -1,0 +1,744 @@
+{
+    "recorded_at": "2026-09-14T13:28:50.758233+00:00",
+    "dataset_sha256": "624ae011e9d90c53742be4b2a7e8a19f3c073223d04a9b6e9bed9ce1eb876199",
+    "dataset_rows": 1446977,
+    "file_count": 147,
+    "total_bytes": 332098173,
+    "files": [
+        {
+            "path": "equipped/evaluation/Bench_comparison.png",
+            "size_bytes": 17621,
+            "sha256": "41634749ec2f21cbbb3dfbc9de331024c6badf1761a64d4baae72faea8dadba8"
+        },
+        {
+            "path": "equipped/evaluation/Deadlift_comparison.png",
+            "size_bytes": 17429,
+            "sha256": "816eef67863489dbcffb71fbf8488eec9fb537157f23a50e2f1541f069dd35ea"
+        },
+        {
+            "path": "equipped/evaluation/feature_set_comparison.csv",
+            "size_bytes": 156,
+            "sha256": "00ca0423d38cfdd7206e18ec4edfd170c3336bf0e7ff00852ff3e67f1e14a7c9"
+        },
+        {
+            "path": "equipped/evaluation/feature_set_comparison.png",
+            "size_bytes": 13269,
+            "sha256": "0c59849be8fa3a5dc6a69f70b7a208b5c0916715cce0d2a8f78f8ffa03505bb3"
+        },
+        {
+            "path": "equipped/evaluation/lift_specific_results.csv",
+            "size_bytes": 717,
+            "sha256": "8b20fced7de63a4eb925a8629e6ef658a2e18d37fc5c802f1e5e14eef54d301c"
+        },
+        {
+            "path": "equipped/evaluation/model_comparison_full.csv",
+            "size_bytes": 407,
+            "sha256": "1bece178234a14ed59a85790e60c9a43d9c6c0c175af4b6f3a0b996e3bd88184"
+        },
+        {
+            "path": "equipped/evaluation/model_results.csv",
+            "size_bytes": 624,
+            "sha256": "66265519fbe49165cb81127f466deb08175ba60b9174f71a61e5679e73be7947"
+        },
+        {
+            "path": "equipped/evaluation/Squat_comparison.png",
+            "size_bytes": 17782,
+            "sha256": "f837c015ada29e70910ed8cbafc2a11226eab01c2ffbdf4610da4a870091cc4e"
+        },
+        {
+            "path": "equipped/evaluation/strength_analysis_gradient_boosting.csv",
+            "size_bytes": 324,
+            "sha256": "3a128d57b9a3d7aea2c8789c2626f180078e903422af1edd3d7daaca87957362"
+        },
+        {
+            "path": "equipped/evaluation/strength_analysis_random_forest.csv",
+            "size_bytes": 324,
+            "sha256": "a5864846462ebf83bdc6dc8992e146a09cda9297bdf3189aa566003bcb466450"
+        },
+        {
+            "path": "equipped/evaluation/subgroup_comparison.png",
+            "size_bytes": 22432,
+            "sha256": "d8e09ba02e4efb0d938910ab29a23d4e22df00701198c9d856e81a5d41c3cdb7"
+        },
+        {
+            "path": "equipped/evaluation/subgroup_results.csv",
+            "size_bytes": 259,
+            "sha256": "a44ad080f047afb5f7829f6722ee42140166dc29434acd6a3b069df28fcea1cf"
+        },
+        {
+            "path": "equipped/forward/metrics.csv",
+            "size_bytes": 377,
+            "sha256": "3d666a0c900d99d2e23b10c5fa57366629cbe7cb74984591365708738831b943"
+        },
+        {
+            "path": "equipped/forward/metrics_retro.csv",
+            "size_bytes": 239,
+            "sha256": "3c5025397de29cbd77200f66428c9b364614a277e119c28955baf8384e9f0853"
+        },
+        {
+            "path": "equipped/forward/ml_predictions.csv",
+            "size_bytes": 238376,
+            "sha256": "08c56ef616d6c679b8ac55a7389cb713b6d7414c8183708e25bb5159277c7cfc"
+        },
+        {
+            "path": "equipped/forward/run_metadata.json",
+            "size_bytes": 756,
+            "sha256": "a037af0dbe4da2f4fa54465c4e66fee8eab7f04b76db18ccdf4d9055f2739f6a"
+        },
+        {
+            "path": "equipped/forward/traditional_predictions.csv",
+            "size_bytes": 162763,
+            "sha256": "fda961e140d3f3e5785df6a71652d057de72a14db10f23982cff6f50f27b5340"
+        },
+        {
+            "path": "equipped/ml_engineered/feature_importance/gradient_boosting_importance.csv",
+            "size_bytes": 700,
+            "sha256": "4b82e2ce84e3e956499f1186b55bb2012363c27fa6d6d6df321183c4d07d5f8d"
+        },
+        {
+            "path": "equipped/ml_engineered/feature_importance/gradient_boosting_importance.png",
+            "size_bytes": 23643,
+            "sha256": "377c9bfe7cf741fafdcc4729711d2d52b22e2d0ecde0c2c2f2c8a0fa796b7593"
+        },
+        {
+            "path": "equipped/ml_engineered/feature_importance/importance_correlation.txt",
+            "size_bytes": 197,
+            "sha256": "cb2290ba255d8d2b2eca4e3f1fef16249517af6fd1ec392f4f13d57d0238e4bd"
+        },
+        {
+            "path": "equipped/ml_engineered/feature_importance/random_forest_importance.csv",
+            "size_bytes": 712,
+            "sha256": "124e3ca5b56342e3d479d9385de9cd1e346866c7eb359d1dca9bbc6bfd75db88"
+        },
+        {
+            "path": "equipped/ml_engineered/feature_importance/random_forest_importance.png",
+            "size_bytes": 23873,
+            "sha256": "666d361afb4d9604f40fe10b7662092ea4b34287eff6a7ed1a849983afc5b11e"
+        },
+        {
+            "path": "equipped/run_metadata.json",
+            "size_bytes": 762,
+            "sha256": "25f96d44ff81c1f6f21fe04e86f3b4aff5acc3ce061658a42341dbb9c809ab98"
+        },
+        {
+            "path": "equipped/traditional/brzycki_results.csv",
+            "size_bytes": 1596875,
+            "sha256": "d2d046176f08477db1da7ef2dd44ef4a196c09dd599137fdc48909a8e5bc2563"
+        },
+        {
+            "path": "equipped/traditional/epley_results.csv",
+            "size_bytes": 1489169,
+            "sha256": "2ef61049e2a04a2bdb77f0b2d1687b78263d3c96de3c55f9c1f1c047c456b687"
+        },
+        {
+            "path": "equipped/walk_forward/diagnostics/bias_by_decile.png",
+            "size_bytes": 89829,
+            "sha256": "339b844c2d225c2c4487cf05021a753b5f67daf0868d11f25f5476f8cc740899"
+        },
+        {
+            "path": "equipped/walk_forward/diagnostics/calibration_plot_Brzycki.png",
+            "size_bytes": 184887,
+            "sha256": "c4c9bf1a84ad1395c8f3c09525bbd24265a7e21decf244fa7c109a2f79f35f9e"
+        },
+        {
+            "path": "equipped/walk_forward/diagnostics/calibration_plot_Drift.png",
+            "size_bytes": 204881,
+            "sha256": "06bc057dd067063188050716a9929a4091849707553c6ded6ad1d123af5d92b8"
+        },
+        {
+            "path": "equipped/walk_forward/diagnostics/calibration_plot_Epley.png",
+            "size_bytes": 182484,
+            "sha256": "14f8d357ef2a1988c27b32ae651d7eb001d913d6c9ce36af83a6fe595e6c85ba"
+        },
+        {
+            "path": "equipped/walk_forward/diagnostics/calibration_plot_Gradient Boosting.png",
+            "size_bytes": 177982,
+            "sha256": "c9d4435ede2bba17a97026f536bb38d3888181c5b7c6c85242a6a17e5562486f"
+        },
+        {
+            "path": "equipped/walk_forward/diagnostics/calibration_plot_Linear Regression.png",
+            "size_bytes": 94787,
+            "sha256": "aecbba282d745fd349299e98498d6f9fc038ab1cb2ecf6d1e4e66b149fe95ad4"
+        },
+        {
+            "path": "equipped/walk_forward/diagnostics/calibration_plot_Persistence.png",
+            "size_bytes": 228053,
+            "sha256": "b201f0bd53333c9796fa3a00b62d641cb69f1cede68b6d8dbfb346caf23e3ebc"
+        },
+        {
+            "path": "equipped/walk_forward/diagnostics/calibration_plot_Random Forest.png",
+            "size_bytes": 179871,
+            "sha256": "833254cf6605b18a3408128e3fca1fd205efb106107837a2734a7e4eaad70a14"
+        },
+        {
+            "path": "equipped/walk_forward/diagnostics/calibration_plot_Ridge.png",
+            "size_bytes": 170754,
+            "sha256": "f95c6c48408d2ec939c07635a28e113df28adbecb2d161f5392fb07ddcb1d22c"
+        },
+        {
+            "path": "equipped/walk_forward/diagnostics/calibration_plot_Rolling Mean.png",
+            "size_bytes": 192318,
+            "sha256": "1c56dbd8cd03d2e76354e4b0edb964629c8e6d78cc03faa4810f341ef0ff2148"
+        },
+        {
+            "path": "equipped/walk_forward/diagnostics/decile_performance.csv",
+            "size_bytes": 6873,
+            "sha256": "49f69888b1f3079427652045eb2cef47c058e631490a60c3fd2cde522d85fe61"
+        },
+        {
+            "path": "equipped/walk_forward/diagnostics/diagnostic_summary.csv",
+            "size_bytes": 1051,
+            "sha256": "67f1a066688e3da3bd3a743ecbeb4dff3448fdc16743dc4737db9c9f8a7a9f75"
+        },
+        {
+            "path": "equipped/walk_forward/diagnostics/residual_plot_Brzycki.png",
+            "size_bytes": 127709,
+            "sha256": "b1a1d5e7bc381e1a9e6b8af7851f399e28da729edab4fe5230a88458521fec0e"
+        },
+        {
+            "path": "equipped/walk_forward/diagnostics/residual_plot_Drift.png",
+            "size_bytes": 80784,
+            "sha256": "19cb320481c533f12747fc1b9248a74efbd480078cc4702d376ecdb6ba06886a"
+        },
+        {
+            "path": "equipped/walk_forward/diagnostics/residual_plot_Epley.png",
+            "size_bytes": 125972,
+            "sha256": "5a3b1fb26cd7500d5af7012ec4e8fb516a862d4f6ccb2f53603191cd47a48eed"
+        },
+        {
+            "path": "equipped/walk_forward/diagnostics/residual_plot_Gradient Boosting.png",
+            "size_bytes": 111223,
+            "sha256": "502841a6c6c4fb0fc2bbd73f2421472c01bf9c0088404522920d2eb3b485424c"
+        },
+        {
+            "path": "equipped/walk_forward/diagnostics/residual_plot_Linear Regression.png",
+            "size_bytes": 45468,
+            "sha256": "7b9f96500e73d31da8d15945198a66f634aec5ed8010a196d5525e0e570f57a9"
+        },
+        {
+            "path": "equipped/walk_forward/diagnostics/residual_plot_Persistence.png",
+            "size_bytes": 130236,
+            "sha256": "39e503863368bc02c78cdd2c9031dc583cb992fb640fac15bc9e10d2ebb6007c"
+        },
+        {
+            "path": "equipped/walk_forward/diagnostics/residual_plot_Random Forest.png",
+            "size_bytes": 130213,
+            "sha256": "20bbcefc08047c05cf5a65fb88b44c1e4524ebd9fba8edd47e0c5cdde693d547"
+        },
+        {
+            "path": "equipped/walk_forward/diagnostics/residual_plot_Ridge.png",
+            "size_bytes": 120755,
+            "sha256": "99fa67e70bc6b018df3bcfdeff38257d388d18959057b93e22887b1bb2d2a525"
+        },
+        {
+            "path": "equipped/walk_forward/diagnostics/residual_plot_Rolling Mean.png",
+            "size_bytes": 118889,
+            "sha256": "3e175a4fe044a9d5c2fbf8319d15123fdfc2e81fffc8f570459a20a59bc37193"
+        },
+        {
+            "path": "equipped/walk_forward/feature_importance/importance_by_fold.csv",
+            "size_bytes": 315016,
+            "sha256": "77864310f12c88f64a3c71915f81246a102178d3440e98388e03aee45549e1d5"
+        },
+        {
+            "path": "equipped/walk_forward/feature_importance/importance_concentration.csv",
+            "size_bytes": 384,
+            "sha256": "61d01f4ce559ceee76347d4f52f539cbb5dc250314b914be628a5097f5c14060"
+        },
+        {
+            "path": "equipped/walk_forward/feature_importance/importance_gradient_boosting.png",
+            "size_bytes": 53357,
+            "sha256": "5130ff55b889615684b4ddc8a4696e6fbbe4fa36a90e12198eb86a74e989adb5"
+        },
+        {
+            "path": "equipped/walk_forward/feature_importance/importance_linear_regression.png",
+            "size_bytes": 51901,
+            "sha256": "5f27baf9f361460cf6431a5b57ccf50791ef41e9db6fa69277fc3a3e179efbd6"
+        },
+        {
+            "path": "equipped/walk_forward/feature_importance/importance_random_forest.png",
+            "size_bytes": 53219,
+            "sha256": "754d35d2ba30f665223c5e1ed51cdf493569c903d3fd219596c3dc1b076e1c65"
+        },
+        {
+            "path": "equipped/walk_forward/feature_importance/importance_ridge.png",
+            "size_bytes": 50184,
+            "sha256": "ade022bad89fd775b534a23ae92eb2b47a1e1c638d41bfc43208a4dd70fb90ef"
+        },
+        {
+            "path": "equipped/walk_forward/feature_importance/importance_stability_gradient_boosting.png",
+            "size_bytes": 129637,
+            "sha256": "f817aec9f7c83584aa4ee03bccc2a90f6af72e9cc9236e40289f2b26230ea623"
+        },
+        {
+            "path": "equipped/walk_forward/feature_importance/importance_stability_linear_regression.png",
+            "size_bytes": 160000,
+            "sha256": "f0f27fc20c360e746929cf7c182e3993a26655c41541e1dfd29da23d2041e38c"
+        },
+        {
+            "path": "equipped/walk_forward/feature_importance/importance_stability_random_forest.png",
+            "size_bytes": 130979,
+            "sha256": "2158355a0b201f1a754afd1056489e53ced2c82a0fb80b430113dcd47680dc8d"
+        },
+        {
+            "path": "equipped/walk_forward/feature_importance/importance_stability_ridge.png",
+            "size_bytes": 121045,
+            "sha256": "b756dfb4c0057c734d0986ae58a179bc5ad178907bdc4284cae67147dc1cdd36"
+        },
+        {
+            "path": "equipped/walk_forward/feature_importance/importance_summary.csv",
+            "size_bytes": 7584,
+            "sha256": "fd6ba3ff8a66f37e919ea8586d3d466430c60997bdad2fd0b7f61c175a51a9fb"
+        },
+        {
+            "path": "equipped/walk_forward/matched_subset/matched_subset_summary.csv",
+            "size_bytes": 1403,
+            "sha256": "e96b1eb8ea918c2734a11ff628923b7216c2273982092b4c827bf34bf2094247"
+        },
+        {
+            "path": "equipped/walk_forward/matched_subset/model_coverage.csv",
+            "size_bytes": 636,
+            "sha256": "953d0124a76512fc086b1f25460f7e03c11bdab905eba68cc1f7363dec7c859c"
+        },
+        {
+            "path": "equipped/walk_forward/run_metadata.json",
+            "size_bytes": 761,
+            "sha256": "e7584872f974b630e55970a32680300b6b83ab8c0f2ef92c8600672ca103961f"
+        },
+        {
+            "path": "equipped/walk_forward/subgroups/subgroup_disparities.csv",
+            "size_bytes": 4790,
+            "sha256": "0482bdfce243a5e4e6c091a5147d0334960f0a1c331a23f47839d7567e2e6629"
+        },
+        {
+            "path": "equipped/walk_forward/subgroups/subgroup_metrics.csv",
+            "size_bytes": 20714,
+            "sha256": "5302787fe3ac30f2cafd3f65f8873431a4c78dbf5976d8e90961594332e912e0"
+        },
+        {
+            "path": "equipped/walk_forward/temporal_analysis/temporal_drift_summary.csv",
+            "size_bytes": 1222,
+            "sha256": "479184782821960970f6e799236edb2d94485b6913c62ebcbcd5e2776ca6a72f"
+        },
+        {
+            "path": "equipped/walk_forward/temporal_analysis/temporal_mae.png",
+            "size_bytes": 117311,
+            "sha256": "9391a2a3039fb7ae7e630c6d8ed0d05dbccafeb4f32f6c3a9b5373fd4edb5522"
+        },
+        {
+            "path": "equipped/walk_forward/temporal_analysis/temporal_metrics.csv",
+            "size_bytes": 65152,
+            "sha256": "24af64532546b89998309ae134479b182683ba110f46511a8748abce0b3bbb95"
+        },
+        {
+            "path": "equipped/walk_forward/temporal_analysis/temporal_residual.png",
+            "size_bytes": 116266,
+            "sha256": "3a453a7a8034c22ae80cfa1e73612c64497db151968668f2b121e259bfd5241b"
+        },
+        {
+            "path": "equipped/walk_forward/temporal_analysis/temporal_rmse.png",
+            "size_bytes": 121392,
+            "sha256": "20aa61cb364732d22ed13a6a8660a87cc211345777591645d0de09c35c2505d9"
+        },
+        {
+            "path": "equipped/walk_forward/walk_forward_comparison.csv",
+            "size_bytes": 1227,
+            "sha256": "eb9db17585f4fcd7fd60845a1c54ff2a0f320b8ac541310f07649b4b289d4f18"
+        },
+        {
+            "path": "equipped/walk_forward/walk_forward_confidence_intervals.csv",
+            "size_bytes": 6061,
+            "sha256": "18fb58b2861b4517b5eb75069984d2ae260ad16dec6c2772b79a5631b8fb9011"
+        },
+        {
+            "path": "equipped/walk_forward/walk_forward_metrics.csv",
+            "size_bytes": 39804,
+            "sha256": "4e1fcaee686d04d0ca9fbfc588fbad99fbc03855a21064488fd35662fd8a8f3f"
+        },
+        {
+            "path": "equipped/walk_forward/walk_forward_predictions.csv",
+            "size_bytes": 159711688,
+            "sha256": "9a05c34065dfd5a847ce2c1439638eeb9866a0b7e1f116922719c6612b3f34cc"
+        },
+        {
+            "path": "equipped/walk_forward/walk_forward_summary.csv",
+            "size_bytes": 1414,
+            "sha256": "ed9749dbb03ed3cb8f9841a06aef1af7e531029b2b4a6631c1249ea763eb43f0"
+        },
+        {
+            "path": "raw/ablation/ablation_metrics.csv",
+            "size_bytes": 7157,
+            "sha256": "89087d2bbc8c1aba2efbc315916d954599f8c10d3c9b4756fd97dda8ceaf5ac1"
+        },
+        {
+            "path": "raw/ablation/ablation_summary.csv",
+            "size_bytes": 711,
+            "sha256": "2da7e846a5f3ba024f5f0bf3fbf0b5c96c464fd2077872667576d8c2f03c7927"
+        },
+        {
+            "path": "raw/ablation/run_metadata.json",
+            "size_bytes": 752,
+            "sha256": "473f0a61d3ec7882dadd3aaf1f5eaa20362c90e80fc29b373bfd965c7458ff1f"
+        },
+        {
+            "path": "raw/evaluation/Bench_comparison.png",
+            "size_bytes": 15530,
+            "sha256": "b7caf6def84952c26a32e0754b1aebb2d1ec92a2da5033a7f434ad49802ab19a"
+        },
+        {
+            "path": "raw/evaluation/Deadlift_comparison.png",
+            "size_bytes": 15966,
+            "sha256": "030d2bd52346dcd27c84b1eedc95cd83f59394993af1508221f050f325b1d8d4"
+        },
+        {
+            "path": "raw/evaluation/feature_set_comparison.csv",
+            "size_bytes": 155,
+            "sha256": "7c9363ac9ce1abe0b26f1c1699d2887d91bc28ed77c1b43fdc2702c9120f3412"
+        },
+        {
+            "path": "raw/evaluation/feature_set_comparison.png",
+            "size_bytes": 13513,
+            "sha256": "8d5d7fb61aa0faec22b486dc43fec310f77e6d41e46f585419040d0e79497cf3"
+        },
+        {
+            "path": "raw/evaluation/lift_specific_results.csv",
+            "size_bytes": 718,
+            "sha256": "a346c8dcf7f2c9e78cf8a977166dae5642bf69ab2454dcc3d5738a5867ebb0f4"
+        },
+        {
+            "path": "raw/evaluation/model_comparison_full.csv",
+            "size_bytes": 406,
+            "sha256": "dd1caf9a5d9195ea7f566a03439a63ccde48f0104e932db9d96cc89a601714f5"
+        },
+        {
+            "path": "raw/evaluation/model_results.csv",
+            "size_bytes": 628,
+            "sha256": "f96163b3ef900b7fbea8a7ad4be7488f4971d37a98c92055d196f41f6ffa403a"
+        },
+        {
+            "path": "raw/evaluation/Squat_comparison.png",
+            "size_bytes": 15314,
+            "sha256": "a42b754cc356f02b25418b9ff1ec09f19fff532a292fe703597b26166503fba9"
+        },
+        {
+            "path": "raw/evaluation/strength_analysis_gradient_boosting.csv",
+            "size_bytes": 324,
+            "sha256": "dbc8d4774bfd12e5976ab1ee43a299e07230e816a4ed570ee911d603b591e782"
+        },
+        {
+            "path": "raw/evaluation/strength_analysis_random_forest.csv",
+            "size_bytes": 325,
+            "sha256": "27d8a23bade5a8476c6fd46fc0e28ddb5c63e1ee9b7b35d0d7aeda31f129a292"
+        },
+        {
+            "path": "raw/evaluation/subgroup_comparison.png",
+            "size_bytes": 24245,
+            "sha256": "29f0621f9ef390a7bcfe382fa81fdeb3cac81b4b42ce8579627c68e114a2f20f"
+        },
+        {
+            "path": "raw/evaluation/subgroup_results.csv",
+            "size_bytes": 260,
+            "sha256": "519fa7dafe7458f4a3635a19129eb7b21b09dc89c1eb02c09b02d535c0415fe4"
+        },
+        {
+            "path": "raw/forward/metrics.csv",
+            "size_bytes": 365,
+            "sha256": "4465ed9ef765df5154b07f7ba7bd54355c74ff5ca86b2260d82ea8964a34be28"
+        },
+        {
+            "path": "raw/forward/metrics_retro.csv",
+            "size_bytes": 240,
+            "sha256": "334ed7cf39447f8e7ce770279293625188e88c5acf6df3eeec752d596be4d9e5"
+        },
+        {
+            "path": "raw/forward/ml_predictions.csv",
+            "size_bytes": 685815,
+            "sha256": "87cadef5fa0d2bc69539ad89dda3820cfd8fec5e13a827e7ae86d7fcf5f6ffe4"
+        },
+        {
+            "path": "raw/forward/run_metadata.json",
+            "size_bytes": 751,
+            "sha256": "a66a65ea1ffd1ba21427047f1076951d178b37c37af9866963a805b350659ea2"
+        },
+        {
+            "path": "raw/forward/traditional_predictions.csv",
+            "size_bytes": 468905,
+            "sha256": "8b363f84a5024161bd054e2c47a523f830342769a192d7c333d196e5a8863943"
+        },
+        {
+            "path": "raw/ml_engineered/feature_importance/gradient_boosting_importance.csv",
+            "size_bytes": 710,
+            "sha256": "128feaa57c981abb6d9c7a1a0c1261dcf378494da21b1e623de448cc765209fb"
+        },
+        {
+            "path": "raw/ml_engineered/feature_importance/gradient_boosting_importance.png",
+            "size_bytes": 23977,
+            "sha256": "fb186175c690750fc772d4a66a7d8c1033c805661f38874c97ebba1e1550b953"
+        },
+        {
+            "path": "raw/ml_engineered/feature_importance/importance_correlation.txt",
+            "size_bytes": 197,
+            "sha256": "799bc487adffd5db39851d00d51ff4734050b4eb1eb701992c1531b0e35e7666"
+        },
+        {
+            "path": "raw/ml_engineered/feature_importance/random_forest_importance.csv",
+            "size_bytes": 715,
+            "sha256": "5da6a53e1a62958a825529cbabaa7e52e5eaddd8b33333c4185b780152d20df8"
+        },
+        {
+            "path": "raw/ml_engineered/feature_importance/random_forest_importance.png",
+            "size_bytes": 23632,
+            "sha256": "f9fed0cf82f1366aceaf20c803d9cd3cc73a978cd2d1f2ae33e52bc35a0982c7"
+        },
+        {
+            "path": "raw/run_metadata.json",
+            "size_bytes": 757,
+            "sha256": "5e621e0ff8ae4cbbcfc96b673981b40629ac1c06557f64ef57ee2db8c25e74cc"
+        },
+        {
+            "path": "raw/traditional/brzycki_results.csv",
+            "size_bytes": 3414147,
+            "sha256": "71c968b9dbb6664fb73af64aabe32660a0db051eda910a5ce305113aaab4b550"
+        },
+        {
+            "path": "raw/traditional/epley_results.csv",
+            "size_bytes": 3212424,
+            "sha256": "f71ba7c48252b719c1e5edff68d6e0cce3d1457b4d71aca6baed1421548dc356"
+        },
+        {
+            "path": "raw/walk_forward/diagnostics/bias_by_decile.png",
+            "size_bytes": 86975,
+            "sha256": "55b718870376630f92e9d3935675403d39850582ec6812090172d00215426214"
+        },
+        {
+            "path": "raw/walk_forward/diagnostics/calibration_plot_Brzycki.png",
+            "size_bytes": 185866,
+            "sha256": "3ee3fc16ac37009fc44b9f43b6e3f9bb64e2ddfaf5e7c5d341a5b0d6b51ddb5f"
+        },
+        {
+            "path": "raw/walk_forward/diagnostics/calibration_plot_Drift.png",
+            "size_bytes": 201969,
+            "sha256": "3ee8d7ca9b1e2927cc24c91224ee7cd02ef95fb56de8dab5fd83876dfc706523"
+        },
+        {
+            "path": "raw/walk_forward/diagnostics/calibration_plot_Epley.png",
+            "size_bytes": 185261,
+            "sha256": "3a46d857652b7033729a5411147162069031db319bded834742228589cfe288e"
+        },
+        {
+            "path": "raw/walk_forward/diagnostics/calibration_plot_Gradient Boosting.png",
+            "size_bytes": 182839,
+            "sha256": "647229c47fa70b8a2c140bc7a3c9ce60834bfe4fcf2ed8e7c765302411d0597c"
+        },
+        {
+            "path": "raw/walk_forward/diagnostics/calibration_plot_Linear Regression.png",
+            "size_bytes": 44118,
+            "sha256": "b1dc7261e5708a1ffeb705080f79b9584563bae3ad8e8b9e48bb4b84199d686a"
+        },
+        {
+            "path": "raw/walk_forward/diagnostics/calibration_plot_Persistence.png",
+            "size_bytes": 216931,
+            "sha256": "07908663ab9e7ab76349eb57d5e6524a0bc98135747e6ed6d124c47a766042d1"
+        },
+        {
+            "path": "raw/walk_forward/diagnostics/calibration_plot_Random Forest.png",
+            "size_bytes": 180493,
+            "sha256": "616102f9e83f5609634c696db214e193f1e741d059a57434614f925725ec8c88"
+        },
+        {
+            "path": "raw/walk_forward/diagnostics/calibration_plot_Ridge.png",
+            "size_bytes": 173901,
+            "sha256": "10f4b039794c0a159a4d44cb73181aa72d90fdd138d1bd616245be9f802b91b2"
+        },
+        {
+            "path": "raw/walk_forward/diagnostics/calibration_plot_Rolling Mean.png",
+            "size_bytes": 183900,
+            "sha256": "d156bde6451514d9d72a825e6a6fad13163616dcbe9ea933b1d9b23e0332dc97"
+        },
+        {
+            "path": "raw/walk_forward/diagnostics/decile_performance.csv",
+            "size_bytes": 6844,
+            "sha256": "9bddf87015187065c3d76a9b08aa0c1d07bfcc2a9db684890a8469af707d095a"
+        },
+        {
+            "path": "raw/walk_forward/diagnostics/diagnostic_summary.csv",
+            "size_bytes": 1057,
+            "sha256": "b2c7f2c23267326767a21c0b8d7c442c3a779ccf299daf9e3d52f707e3cdae09"
+        },
+        {
+            "path": "raw/walk_forward/diagnostics/residual_plot_Brzycki.png",
+            "size_bytes": 114538,
+            "sha256": "745dfc3a795fafc843476489b1eccb1606e137a9d5810a8153b020081e96d6a2"
+        },
+        {
+            "path": "raw/walk_forward/diagnostics/residual_plot_Drift.png",
+            "size_bytes": 78435,
+            "sha256": "f47245a0d75227c8bc0149b68f777f3e1656d95ac29c1b0c05a1b0401ce34375"
+        },
+        {
+            "path": "raw/walk_forward/diagnostics/residual_plot_Epley.png",
+            "size_bytes": 113564,
+            "sha256": "aac238cfbb3e14e2e7d0e59410d147c5e8e4e2db51e2d11c7e1a7e823cdb9b04"
+        },
+        {
+            "path": "raw/walk_forward/diagnostics/residual_plot_Gradient Boosting.png",
+            "size_bytes": 116448,
+            "sha256": "fc3e8ea3941d7ae11372eaac4e5fd60a0ff88b6cf979ef2f4cbb046207dad680"
+        },
+        {
+            "path": "raw/walk_forward/diagnostics/residual_plot_Linear Regression.png",
+            "size_bytes": 26340,
+            "sha256": "88fa6e1c736d3625b656a74566e801c7ce89b4f5a8b5269ba8ca0f39b6eaa841"
+        },
+        {
+            "path": "raw/walk_forward/diagnostics/residual_plot_Persistence.png",
+            "size_bytes": 122307,
+            "sha256": "5a596593831eb4c230b7286a4ebc479bce32b44288a2513c1c38ce46063e6e77"
+        },
+        {
+            "path": "raw/walk_forward/diagnostics/residual_plot_Random Forest.png",
+            "size_bytes": 119249,
+            "sha256": "07285034a1babcddcb6678b11e3f126f2822f0860c203ac7955fda489086f260"
+        },
+        {
+            "path": "raw/walk_forward/diagnostics/residual_plot_Ridge.png",
+            "size_bytes": 120129,
+            "sha256": "42af0c0fa5a5d786196395ae83f377c9f15598fd06c4f31d480f9aeacf738953"
+        },
+        {
+            "path": "raw/walk_forward/diagnostics/residual_plot_Rolling Mean.png",
+            "size_bytes": 116614,
+            "sha256": "7a2035e8f92a4c379628097a440b18679fa0233c9c7567eb03a8cdce5be0d2d1"
+        },
+        {
+            "path": "raw/walk_forward/feature_importance/importance_by_fold.csv",
+            "size_bytes": 263322,
+            "sha256": "61c61f9185c4c1ce41dd5427c4bd2097b49a7bcffe0e4c15ea2e6bbd03c23d8d"
+        },
+        {
+            "path": "raw/walk_forward/feature_importance/importance_concentration.csv",
+            "size_bytes": 389,
+            "sha256": "037e6ef1871ac4f33d8ac30bdfbf890bd565e035a952f3d8bd62b4a80f0908c4"
+        },
+        {
+            "path": "raw/walk_forward/feature_importance/importance_gradient_boosting.png",
+            "size_bytes": 54128,
+            "sha256": "a93056d23405e3190cb03fd87f39f5fac1fdf3bffad509a63f19424cfc6a62b9"
+        },
+        {
+            "path": "raw/walk_forward/feature_importance/importance_linear_regression.png",
+            "size_bytes": 51279,
+            "sha256": "dc26590851c94f6fdc03def27f9313657c83e79d2c4719f64a8c5cfa47fdb519"
+        },
+        {
+            "path": "raw/walk_forward/feature_importance/importance_random_forest.png",
+            "size_bytes": 54521,
+            "sha256": "110f1fadc584960383f3f5e6f5d6c19d04e39b56670411b23be93f4f6641297f"
+        },
+        {
+            "path": "raw/walk_forward/feature_importance/importance_ridge.png",
+            "size_bytes": 51532,
+            "sha256": "07bc5fafe736537a41d52dc4acfb1659ab6651bb99c6276755f977bdacaae051"
+        },
+        {
+            "path": "raw/walk_forward/feature_importance/importance_stability_gradient_boosting.png",
+            "size_bytes": 142475,
+            "sha256": "e427bd4a8d5968bd7df301f518f49c201ca1d84ea3d4f222d7660838d515da20"
+        },
+        {
+            "path": "raw/walk_forward/feature_importance/importance_stability_linear_regression.png",
+            "size_bytes": 150848,
+            "sha256": "0872ea5434660219b702f866efff04516d6fca32918e61f46cd886b3aa5118fe"
+        },
+        {
+            "path": "raw/walk_forward/feature_importance/importance_stability_random_forest.png",
+            "size_bytes": 135075,
+            "sha256": "7a608f7c4894c887a53f4e5c9f6f97fbf1a54374774595e259b493e75c9c99c3"
+        },
+        {
+            "path": "raw/walk_forward/feature_importance/importance_stability_ridge.png",
+            "size_bytes": 138133,
+            "sha256": "891cf6e7181aa02d8d62d523aab5cb8157435210edf80ea35e9f8467ad9b89cc"
+        },
+        {
+            "path": "raw/walk_forward/feature_importance/importance_summary.csv",
+            "size_bytes": 7630,
+            "sha256": "19cbe288898fe17475ccd9c2141dd8c313f92e094c14cc0308c22244dba38021"
+        },
+        {
+            "path": "raw/walk_forward/matched_subset/matched_subset_summary.csv",
+            "size_bytes": 1382,
+            "sha256": "994df69c1f81d743362c7b3b792a9ee8f48bca512f588b90857f764d55f5fec5"
+        },
+        {
+            "path": "raw/walk_forward/matched_subset/model_coverage.csv",
+            "size_bytes": 636,
+            "sha256": "629b52773689a31b9e16473a754408988df4cab8f8268ea8e2b89e40ef2051b3"
+        },
+        {
+            "path": "raw/walk_forward/run_metadata.json",
+            "size_bytes": 756,
+            "sha256": "001ba12e5a7654e77680355ab5d479394289eb9692f89460a818cfa65ee79314"
+        },
+        {
+            "path": "raw/walk_forward/subgroups/subgroup_disparities.csv",
+            "size_bytes": 4784,
+            "sha256": "95f290d7a01d9ad68923119b25979ad56bba13cd10077cd557ef17310673f769"
+        },
+        {
+            "path": "raw/walk_forward/subgroups/subgroup_metrics.csv",
+            "size_bytes": 19519,
+            "sha256": "96668badade98a97bb8262f99d9247d816853885b6dc0f13ff1d6eace4bc88de"
+        },
+        {
+            "path": "raw/walk_forward/temporal_analysis/temporal_drift_summary.csv",
+            "size_bytes": 1227,
+            "sha256": "d5dc942833a82bce78837876e954bea9e6b7eb1714eb2ef32523b39721602be9"
+        },
+        {
+            "path": "raw/walk_forward/temporal_analysis/temporal_mae.png",
+            "size_bytes": 66405,
+            "sha256": "b97dacdbb68abf0cd78afd3f5f721333e6ce0488c6e97c0d785a737f09a186c1"
+        },
+        {
+            "path": "raw/walk_forward/temporal_analysis/temporal_metrics.csv",
+            "size_bytes": 50139,
+            "sha256": "eddc542d27fbf443a6b3c96f06577efb5910eb9d3cac570da433c80a0bb0730f"
+        },
+        {
+            "path": "raw/walk_forward/temporal_analysis/temporal_residual.png",
+            "size_bytes": 66621,
+            "sha256": "7e44b65b2f1b5b2b5bde6653769b1c36f43edf3101857cd2fb496963f2fa7a97"
+        },
+        {
+            "path": "raw/walk_forward/temporal_analysis/temporal_rmse.png",
+            "size_bytes": 65736,
+            "sha256": "5db43a200ee51b2fbc7c00e10c42da8d72062d074b7b4a4841fe13fcb829ea57"
+        },
+        {
+            "path": "raw/walk_forward/walk_forward_comparison.csv",
+            "size_bytes": 1236,
+            "sha256": "0e55fb15ac2f2e4398e92d325f08d967d015adad04a8ae57b022b52c866334e3"
+        },
+        {
+            "path": "raw/walk_forward/walk_forward_confidence_intervals.csv",
+            "size_bytes": 6039,
+            "sha256": "9b300fc406076b25556512be44303debadf660148694a386bb06970e92cfdc9c"
+        },
+        {
+            "path": "raw/walk_forward/walk_forward_metrics.csv",
+            "size_bytes": 30064,
+            "sha256": "a0ad9a0548b4309cd7dcdbaae53b1ded0f341356284e1b215056d12d4d491c88"
+        },
+        {
+            "path": "raw/walk_forward/walk_forward_predictions.csv",
+            "size_bytes": 152608505,
+            "sha256": "877f249f77281a74b335a513db7a75b924dbb5f28b86177f676c94114813c248"
+        },
+        {
+            "path": "raw/walk_forward/walk_forward_summary.csv",
+            "size_bytes": 1423,
+            "sha256": "401adadcf1c44cc89d1de5d5693626187a94f38e9887c683b8f14ca8907a3bcb"
+        }
+    ]
+}

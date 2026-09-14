@@ -2,6 +2,7 @@ from pathlib import Path
 import pandas as pd
 
 from src.core.logging import get_logger
+from src.evaluation.metrics import compute_basic_metrics
 from src.models.traditional_models import predict_traditional
 
 
@@ -48,6 +49,46 @@ def run_traditional_models(df_model, trad_dir):
             logger.info("%s predictions generated for %d athletes.", name, len(df_check))
         else:
             logger.warning("%s prediction output was empty.", name)
+
+    # Emit metrics, not only raw prediction pairs. Storing Actual/Predicted
+    # alone meant every reported traditional figure -- including the Brzycki
+    # R2 of 0.99 that anchors the reconstruction argument -- had to be derived
+    # by hand afterwards, leaving the project's most striking number without
+    # traceable provenance.
+    metrics_rows = []
+    for name, frame in (("Epley", epley_df), ("Brzycki", brzycki_df)):
+        usable = frame["Actual"].notna() & frame["Predicted"].notna()
+        n_scored = int(usable.sum())
+
+        if n_scored == 0:
+            logger.warning("%s produced no scorable predictions.", name)
+            continue
+
+        metrics = compute_basic_metrics(
+            frame.loc[usable, "Actual"].values,
+            frame.loc[usable, "Predicted"].values,
+        )
+        metrics_rows.append({
+            "Model": name,
+            "MAE": metrics.mae,
+            "RMSE": metrics.rmse,
+            "R2": metrics.r2,
+            "n_scored": n_scored,
+            "n_eligible": len(frame),
+            # These equations need recorded attempts, so they describe a
+            # subpopulation. Reported here so the restriction travels with the
+            # numbers rather than being rediscovered later.
+            "coverage": n_scored / len(frame) if len(frame) else 0.0,
+        })
+        logger.info(
+            "%s (retrospective): MAE=%.2f RMSE=%.2f R2=%.4f on %d of %d observations",
+            name, metrics.mae, metrics.rmse, metrics.r2, n_scored, len(frame),
+        )
+
+    if metrics_rows:
+        metrics_path = trad_dir / "traditional_metrics.csv"
+        pd.DataFrame(metrics_rows).to_csv(metrics_path, index=False)
+        logger.info("Saved traditional metrics to %s", metrics_path)
 
     logger.info("Traditional model processing complete.")
 
