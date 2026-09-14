@@ -104,6 +104,10 @@ def run_walk_forward_pipeline(df, group_name):
         baselines=baselines,
         granularity=WALK_FORWARD_GRANULARITY,
         min_train_periods=MIN_TRAIN_PERIODS,
+        # Completed folds are persisted as they finish. A production run takes
+        # tens of minutes to hours, and previously any interruption discarded
+        # all of it.
+        checkpoint_dir=base_dir,
     )
 
     # ------------------------------------------------------------------

@@ -9,6 +9,11 @@ from src.evaluation.metrics import compute_global_forecast_metrics
 from src.evaluation.statistics import run_all_comparisons, compute_model_confidence_intervals
 from src.evaluation.diagnostics import run_and_save_diagnostics
 from src.evaluation.temporal_analysis import run_and_save_temporal_analysis
+from src.evaluation.checkpointing import (
+    WalkForwardCheckpoint,
+    _as_native,
+    build_fingerprint,
+)
 from src.evaluation.matched_subset import run_and_save_matched_subset
 from src.evaluation.walk_forward_subgroups import run_and_save_subgroup_analysis
 from src.evaluation.walk_forward_importance import run_and_save_importance
@@ -38,12 +43,17 @@ class WalkForwardEvaluator:
         models: Dict[str, Any], 
         baselines: Dict[str, Any], 
         granularity: str = "year", 
-        min_train_periods: int = 1
+        min_train_periods: int = 1,
+        checkpoint_dir=None,
     ):
         self.models = models
         self.baselines = baselines
         self.granularity = granularity
         self.min_train_periods = min_train_periods
+        # Where completed folds are persisted as they finish. None disables
+        # checkpointing, which suits short runs and tests.
+        self.checkpoint_dir = checkpoint_dir
+        self.checkpoint = None
         self.metrics_results = []
         self.prediction_results = []
         # Per-fold feature attribution. Captured while each model is still
@@ -90,6 +100,25 @@ class WalkForwardEvaluator:
 
         # 1. Ensure correct athlete ID grouping to prevent collision
         df_raw["Athlete_ID"] = build_athlete_id(df_raw)
+
+        # Resume support. The fingerprint covers everything that changes what a
+        # fold computes, so a checkpoint written under a different feature or
+        # model set is discarded rather than spliced into this run.
+        self.checkpoint = WalkForwardCheckpoint(
+            directory=self.checkpoint_dir,
+            fingerprint=build_fingerprint(
+                feature_cols=feature_cols,
+                model_names=list({**self.baselines, **self.models}),
+                granularity=self.granularity,
+                min_train_periods=self.min_train_periods,
+            ),
+            enabled=self.checkpoint_dir is not None,
+        ) if self.checkpoint_dir is not None else None
+
+        completed_windows = set()
+        if self.checkpoint is not None:
+            completed_windows = self.checkpoint.completed_windows()
+            self.prediction_results.extend(self.checkpoint.load_predictions())
         
         time_periods = self._get_time_periods(df_raw)
         periods = sorted(time_periods.unique())
@@ -105,6 +134,12 @@ class WalkForwardEvaluator:
         for i in range(self.min_train_periods, len(periods)):
             train_periods = periods[:i]
             test_period = periods[i]
+
+            if test_period in completed_windows:
+                logger.info(
+                    "Window %s already present in checkpoint; skipping.", test_period
+                )
+                continue
 
             train_mask = time_periods.isin(train_periods)
             test_mask = time_periods == test_period
@@ -125,7 +160,13 @@ class WalkForwardEvaluator:
             test_engineered_mask = self._get_time_periods(df_test_context_final) == test_period
             df_test_final = df_test_context_final[test_engineered_mask].copy()
 
+            predictions_before = len(self.prediction_results)
             self._run_iteration(df_train_final, df_test_final, feature_cols, test_period, periods[0], periods[i-1])
+
+            if self.checkpoint is not None:
+                self.checkpoint.record_window(
+                    test_period, self.prediction_results[predictions_before:]
+                )
 
     def _run_iteration(
         self,
@@ -214,12 +255,16 @@ class WalkForwardEvaluator:
                     "observation_id": test_clean.loc[idx, "observation_id"],
                     "athlete_id": test_clean.loc[idx, "Athlete_ID"],
                     "date": test_clean.loc[idx, "Date"],
-                    "forecast_window": forecast_window,
+                    # Window bounds come from Date.dt.year as numpy int32.
+                    # Stored as native Python so that a resumed run, whose
+                    # values arrive as Python ints, infers the same dtype as an
+                    # uninterrupted one rather than widening to int64.
+                    "forecast_window": _as_native(forecast_window),
                     "y_true": y_test.loc[idx],
                     "y_pred": pred,
                     "model": model_name,
-                    "train_window_start": train_start,
-                    "train_window_end": train_end,
+                    "train_window_start": _as_native(train_start),
+                    "train_window_end": _as_native(train_end),
                 }
                 for attribute in available_attributes:
                     record[attribute] = test_clean.loc[idx, attribute]
@@ -329,6 +374,11 @@ class WalkForwardEvaluator:
             logger.info("Saved walk_forward_metrics.csv (per-fold metrics)")
 
         self._validate_outputs(output_dir)
+
+        # Authoritative outputs exist, so the working checkpoint is no longer
+        # needed and must not linger where it could be mistaken for a result.
+        if self.checkpoint is not None:
+            self.checkpoint.clear()
 
     def _validate_outputs(self, output_dir: Path):
         """Validates that all expected output files were successfully generated."""

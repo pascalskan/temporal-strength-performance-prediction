@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "temporal-strength-performance-prediction"
+# Results are cited against a version. Bump this whenever a change alters
+# published numbers, so a figure can be traced to the code that produced it --
+# CITATION.cff previously cited software that had no version at all.
+version = "0.2.0"
+description = "Evaluation methodology and information structure in longitudinal strength forecasting"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { file = "LICENSE" }
+
+authors = [
+    { name = "Pascal Skannavis" },
+]
+
+keywords = [
+    "machine-learning",
+    "time-series",
+    "walk-forward-validation",
+    "data-leakage",
+    "sports-analytics",
+    "reproducible-research",
+]
+
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+]
+
+# Kept in step with requirements.txt, which remains the file CI installs from.
+dependencies = [
+    "pandas==2.2.2",
+    "numpy==1.26.4",
+    "scikit-learn==1.5.1",
+    "matplotlib==3.9.0",
+    "scipy==1.13.1",
+    "tqdm==4.66.4",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==8.3.5",
+]
+
+[project.urls]
+Repository = "https://github.com/pascalskan/temporal-strength-performance-prediction"
+
+[tool.setuptools]
+packages = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# Repository root on sys.path so `src.` imports resolve without installation,
+# matching how the pipelines are invoked.
+pythonpath = ["."]
