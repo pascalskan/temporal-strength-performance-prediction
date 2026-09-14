@@ -11,6 +11,7 @@ from src.data.provenance import (
     report_comparison,
 )
 from src.io.paths import ProjectPaths
+from src.pipelines.ablation_pipeline import run_ablation_pipeline
 from src.pipelines.forward_pipeline import run_forward_pipeline
 from src.pipelines.retrospective_pipeline import run_pipeline
 from src.pipelines.walk_forward_pipeline import run_walk_forward_pipeline
@@ -23,7 +24,14 @@ STAGES = {
     "retrospective": run_pipeline,
     "forward": run_forward_pipeline,
     "walk_forward": run_walk_forward_pipeline,
+    # Costs one full walk-forward run per feature set, so it is excluded from
+    # DEFAULT_STAGES and must be requested explicitly.
+    "ablation": run_ablation_pipeline,
 }
+
+# Ablation is omitted: at roughly four times the walk-forward runtime it should
+# be a deliberate choice, not something a routine run pays for.
+DEFAULT_STAGES = ["retrospective", "forward", "walk_forward"]
 
 COHORTS = ("raw", "equipped")
 
@@ -50,9 +58,12 @@ def main():
         "--stages",
         nargs="+",
         choices=list(STAGES),
-        default=list(STAGES),
+        default=list(DEFAULT_STAGES),
         metavar="STAGE",
-        help=f"Evaluation protocols to run: {', '.join(STAGES)} (default: all).",
+        help=(
+            f"Stages to run: {', '.join(STAGES)} "
+            f"(default: {', '.join(DEFAULT_STAGES)}; ablation is costly and opt-in)."
+        ),
     )
     parser.add_argument(
         "--cohorts",

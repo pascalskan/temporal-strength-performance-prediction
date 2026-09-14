@@ -10,6 +10,8 @@ from src.evaluation.statistics import run_all_comparisons, compute_model_confide
 from src.evaluation.diagnostics import run_and_save_diagnostics
 from src.evaluation.temporal_analysis import run_and_save_temporal_analysis
 from src.evaluation.matched_subset import run_and_save_matched_subset
+from src.evaluation.walk_forward_subgroups import run_and_save_subgroup_analysis
+from src.evaluation.walk_forward_importance import run_and_save_importance
 from src.models.baselines import PersistenceBaseline, RollingMeanBaseline, DriftBaseline
 from src.data.identity import build_athlete_id
 
@@ -24,6 +26,13 @@ class WalkForwardEvaluator:
 
     # Columns the evaluator itself depends on, independent of feature_cols.
     REQUIRED_COLUMNS = ("Date", "MeetName")
+
+    # Attributes carried onto each prediction so robustness analysis can run
+    # from the prediction file alone. Joining back to the source afterwards
+    # would have to reproduce the fold construction to align rows, which is
+    # both fragile and an opportunity to reintroduce the leakage the fold
+    # construction exists to prevent.
+    SUBGROUP_ATTRIBUTES = ("Sex", "Age", "BodyweightKg", "Equipment")
     def __init__(
         self, 
         models: Dict[str, Any], 
@@ -37,6 +46,10 @@ class WalkForwardEvaluator:
         self.min_train_periods = min_train_periods
         self.metrics_results = []
         self.prediction_results = []
+        # Per-fold feature attribution. Captured while each model is still
+        # fitted on that fold's training window; recomputing later would
+        # require refitting every fold.
+        self.importance_results = []
 
     def _get_time_periods(self, df: pd.DataFrame) -> pd.Series:
         if self.granularity == "year":
@@ -192,8 +205,12 @@ class WalkForwardEvaluator:
             # model absent from a window entirely would understate its own
             # denominator, making coverage look better than it is.
 
+            available_attributes = [
+                c for c in self.SUBGROUP_ATTRIBUTES if c in test_clean.columns
+            ]
+
             for idx, pred in zip(y_test.index, preds):
-                self.prediction_results.append({
+                record = {
                     "observation_id": test_clean.loc[idx, "observation_id"],
                     "athlete_id": test_clean.loc[idx, "Athlete_ID"],
                     "date": test_clean.loc[idx, "Date"],
@@ -202,9 +219,65 @@ class WalkForwardEvaluator:
                     "y_pred": pred,
                     "model": model_name,
                     "train_window_start": train_start,
-                    "train_window_end": train_end
-                })
+                    "train_window_end": train_end,
+                }
+                for attribute in available_attributes:
+                    record[attribute] = test_clean.loc[idx, attribute]
+
+                self.prediction_results.append(record)
+
+            self._record_feature_importance(
+                model_name, model, feature_cols, forecast_window
+            )
         
+    def _record_feature_importance(self, model_name, model, feature_cols, forecast_window):
+        """
+        Capture what the fitted model attributed to each feature in this fold.
+
+        Tree ensembles expose impurity-based importances; linear models expose
+        coefficients, recorded as absolute magnitude so the two are comparable
+        in rank. Baselines and the traditional equations have no learned
+        parameters and are skipped.
+
+        These are associations under the fitted model, not evidence that a
+        feature drives performance. Impurity importance in particular inflates
+        high-cardinality and highly correlated features, and the engineered
+        features here are strongly correlated with one another by construction.
+        """
+        estimator = model
+        # Unwrap a Pipeline so the scaler is not mistaken for the estimator.
+        if hasattr(model, "named_steps"):
+            estimator = list(model.named_steps.values())[-1]
+
+        if hasattr(estimator, "feature_importances_"):
+            values = np.asarray(estimator.feature_importances_, dtype=float)
+            kind = "impurity"
+        elif hasattr(estimator, "coef_"):
+            values = np.abs(np.asarray(estimator.coef_, dtype=float).ravel())
+            kind = "abs_coefficient"
+        else:
+            return
+
+        if len(values) != len(feature_cols):
+            logger.warning(
+                "Model '%s' reported %d attributions for %d features; skipping.",
+                model_name, len(values), len(feature_cols),
+            )
+            return
+
+        total = values.sum()
+        for feature, value in zip(feature_cols, values):
+            self.importance_results.append({
+                "forecast_window": forecast_window,
+                "model": model_name,
+                "feature": feature,
+                "attribution": float(value),
+                # Normalised so folds and model families are comparable;
+                # coefficients and impurities are on unrelated scales.
+                "attribution_share": float(value / total) if total > 0 else float("nan"),
+                "attribution_kind": kind,
+            })
+
     def save_results(self, output_dir: Path, comparisons: List[Tuple[str, str]]):
         output_dir = Path(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -239,6 +312,16 @@ class WalkForwardEvaluator:
             # with recorded attempts, so pooled metrics above are not directly
             # comparable across all models.
             run_and_save_matched_subset(df_predictions, output_dir / "matched_subset")
+
+            run_and_save_subgroup_analysis(
+                df_predictions, output_dir / "subgroups"
+            )
+
+        if self.importance_results:
+            importance_dir = output_dir / "feature_importance"
+            run_and_save_importance(
+                pd.DataFrame(self.importance_results), importance_dir
+            )
             
         if self.metrics_results:
             df_metrics = pd.DataFrame(self.metrics_results)

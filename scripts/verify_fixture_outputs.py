@@ -42,6 +42,9 @@ REQUIRED_OUTPUTS = {
         "walk_forward/diagnostics/diagnostic_summary.csv",
         "walk_forward/temporal_analysis/temporal_metrics.csv",
         "walk_forward/matched_subset/model_coverage.csv",
+        "walk_forward/subgroups/subgroup_metrics.csv",
+        "walk_forward/feature_importance/importance_summary.csv",
+        "walk_forward/feature_importance/importance_concentration.csv",
     ],
 }
 

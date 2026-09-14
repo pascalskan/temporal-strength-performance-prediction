@@ -35,7 +35,18 @@ def run_naive_baseline(df_model_no_attempts, yb_test, split_idx):
 
     return results
 
+# These baselines are defined by specific columns rather than by a feature
+# matrix: Persistence *is* the previous total, Rolling Mean *is* the recent
+# average. They therefore declare requires_frame and read those columns by name
+# from the test frame, like the traditional equations do.
+#
+# Without this, feature ablation could not run: removing Prev_Total from the
+# feature set to test what a model learns without it would also delete the
+# Persistence baseline, when what is wanted is the opposite -- an unchanged
+# reference line to measure the ablated models against.
 class PersistenceBaseline:
+    requires_frame = True
+
     def fit(self, X, y=None):
         return self
     def predict(self, X):
@@ -44,6 +55,8 @@ class PersistenceBaseline:
         return X['Prev_Total']
 
 class RollingMeanBaseline:
+    requires_frame = True
+
     def __init__(self, window=3):
         self.window = window
 
@@ -56,6 +69,8 @@ class RollingMeanBaseline:
         return X['Rolling_Mean_3']
 
 class DriftBaseline:
+    requires_frame = True
+
     def fit(self, X, y=None):
         return self
 
