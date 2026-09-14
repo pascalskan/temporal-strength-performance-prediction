@@ -8,21 +8,18 @@ run several times slower for an analysis that is not needed on every run.
 """
 import time
 
-from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
-from sklearn.linear_model import LinearRegression, Ridge
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
 
+from src.config.experiment import (
+    MIN_TRAIN_PERIODS,
+    WALK_FORWARD_GRANULARITY,
+    build_models,
+    build_temporal_baselines,
+)
 from src.core.logging import get_logger
 from src.evaluation.ablation import run_and_save_ablation
 from src.evaluation.walk_forward import WalkForwardEvaluator
 from src.features.temporal import feature_engineering
 from src.io.paths import ProjectPaths
-from src.models.baselines import (
-    DriftBaseline,
-    PersistenceBaseline,
-    RollingMeanBaseline,
-)
 from src.pipelines.walk_forward_pipeline import create_walk_forward_target
 from src.reproducibility.environment import capture_experiment_metadata
 from src.reproducibility.metadata import save_metadata
@@ -46,31 +43,11 @@ def build_evaluator() -> WalkForwardEvaluator:
     feature set, but they score only the subpopulation with recorded attempts,
     which would make their row incomparable to the rest of the table.
     """
-    models = {
-        "Linear Regression": LinearRegression(),
-        "Ridge": Pipeline([
-            ("scaler", StandardScaler()),
-            ("ridge", Ridge(random_state=42)),
-        ]),
-        "Random Forest": RandomForestRegressor(
-            n_estimators=200, random_state=42, n_jobs=-1
-        ),
-        "Gradient Boosting": GradientBoostingRegressor(
-            n_estimators=200, random_state=42
-        ),
-    }
-
-    baselines = {
-        "Persistence": PersistenceBaseline(),
-        "Rolling Mean": RollingMeanBaseline(),
-        "Drift": DriftBaseline(),
-    }
-
     return WalkForwardEvaluator(
-        models=models,
-        baselines=baselines,
-        granularity="year",
-        min_train_periods=5,
+        models=build_models(),
+        baselines=build_temporal_baselines(),
+        granularity=WALK_FORWARD_GRANULARITY,
+        min_train_periods=MIN_TRAIN_PERIODS,
     )
 
 

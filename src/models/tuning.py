@@ -1,6 +1,6 @@
 from typing import Tuple, Dict, Any
 import pandas as pd
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import GridSearchCV, TimeSeriesSplit
 
 from src.config.constants import (
     GB_FULL_GRID,
@@ -10,6 +10,26 @@ from src.config.constants import (
     SMALL_DATASET_THRESHOLD,
 )
 from src.models.factories import create_gradient_boosting, create_random_forest
+
+# Cross-validation strategy for hyperparameter search.
+#
+# Forward-chaining rather than K-fold. The data reaching these tuners comes from
+# a chronological split and remains in time order, so K-fold -- which holds out
+# one contiguous block and trains on the rest, including blocks that come after
+# it -- would select hyperparameters using later records to predict earlier
+# ones. That is the leakage this project exists to measure, and hyperparameter
+# selection is not exempt: parameters chosen with sight of the future are
+# chosen partly for a task the model will never face at deployment.
+#
+# TimeSeriesSplit always trains on a prefix and validates on the segment that
+# follows, matching how the model is ultimately evaluated.
+CV_SPLITS = 3
+
+
+def _cross_validator(n_samples: int) -> TimeSeriesSplit:
+    """Forward-chaining splitter, sized so every fold has data to train on."""
+    n_splits = min(CV_SPLITS, max(2, n_samples - 1))
+    return TimeSeriesSplit(n_splits=n_splits)
 
 
 def get_param_grids(dataset_size: int) -> Tuple[Dict[str, Any], Dict[str, Any]]:
@@ -24,7 +44,7 @@ def tune_random_forest(X_train: pd.DataFrame, y_train: pd.Series) -> Tuple[Any, 
     rf_grid = GridSearchCV(
         create_random_forest(),
         rf_param_grid,
-        cv=3,
+        cv=_cross_validator(len(X_train)),
         scoring="r2",
         n_jobs=-1
     )
@@ -40,7 +60,7 @@ def tune_gradient_boosting(X_train: pd.DataFrame, y_train: pd.Series) -> Tuple[A
     gb_grid = GridSearchCV(
         create_gradient_boosting(),
         gb_param_grid,
-        cv=3,
+        cv=_cross_validator(len(X_train)),
         scoring="r2",
         n_jobs=-1
     )

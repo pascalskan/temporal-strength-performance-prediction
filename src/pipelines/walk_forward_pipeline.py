@@ -1,21 +1,18 @@
 import time
 
-from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
-from sklearn.linear_model import LinearRegression, Ridge
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
 
 from src.config.features import FORECAST_FEATURES
+from src.config.experiment import (
+    MIN_TRAIN_PERIODS,
+    MODEL_COMPARISONS,
+    WALK_FORWARD_GRANULARITY,
+    build_all_baselines,
+    build_models,
+)
 from src.core.logging import get_logger
 from src.evaluation.walk_forward import WalkForwardEvaluator
 from src.features.temporal import feature_engineering
 from src.io.paths import ProjectPaths
-from src.models.baselines import (
-    DriftBaseline,
-    PersistenceBaseline,
-    RollingMeanBaseline,
-)
-from src.models.traditional_baselines import BrzyckiBaseline, EpleyBaseline
 from src.reproducibility.environment import capture_experiment_metadata
 from src.reproducibility.metadata import save_metadata
 
@@ -95,56 +92,18 @@ def run_walk_forward_pipeline(df, group_name):
     # Machine Learning Models
     # ------------------------------------------------------------------
 
-    models = {
-        "Linear Regression": LinearRegression(),
+    # Model set, protocol settings and comparison pairs all come from
+    # src/config/experiment.py, so the ablation stage evaluates exactly the
+    # same models as the headline run rather than a parallel definition that
+    # can drift out of step.
+    models = build_models()
+    baselines = build_all_baselines()
 
-        "Ridge": Pipeline([
-            ("scaler", StandardScaler()),
-            ("ridge", Ridge(random_state=42)),
-        ]),
-
-        "Random Forest": RandomForestRegressor(
-            n_estimators=200,
-            random_state=42,
-            n_jobs=-1,
-        ),
-
-        "Gradient Boosting": GradientBoostingRegressor(
-            n_estimators=200,
-            random_state=42,
-        ),
-    }
-
-    # ------------------------------------------------------------------
-    # Forecasting Baselines
-    # ------------------------------------------------------------------
-
-    baselines = {
-        "Persistence": PersistenceBaseline(),
-        "Rolling Mean": RollingMeanBaseline(),
-        "Drift": DriftBaseline(),
-        # Traditional 1RM equations, previously available to the retrospective
-        # and forward protocols but not to this one -- so the primary
-        # methodology could not compare against the methods the study set out
-        # to assess. They score only competitions with recorded attempts
-        # (62.7% of raw, 30.4% of equipped), so their pooled metrics cover a
-        # different subpopulation; matched_subset/ holds the like-for-like
-        # comparison.
-        "Epley": EpleyBaseline(),
-        "Brzycki": BrzyckiBaseline(),
-    }
-
-    # ------------------------------------------------------------------
-    # Walk-Forward Evaluator
-    # ------------------------------------------------------------------
-
-    # Scientific hardening:
-    # Increase minimum training periods to reduce unstable early folds.
     evaluator = WalkForwardEvaluator(
         models=models,
         baselines=baselines,
-        granularity="year",
-        min_train_periods=5,
+        granularity=WALK_FORWARD_GRANULARITY,
+        min_train_periods=MIN_TRAIN_PERIODS,
     )
 
     # ------------------------------------------------------------------
@@ -162,15 +121,7 @@ def run_walk_forward_pipeline(df, group_name):
     # Publication-Grade Statistical Comparisons
     # ------------------------------------------------------------------
 
-    comparisons = [
-        ("Rolling Mean", "Brzycki"),
-        ("Gradient Boosting", "Brzycki"),
-        ("Rolling Mean", "Gradient Boosting"),
-        ("Rolling Mean", "Ridge"),
-        ("Rolling Mean", "Random Forest"),
-        ("Rolling Mean", "Linear Regression"),
-        ("Persistence", "Gradient Boosting"),
-    ]
+    comparisons = MODEL_COMPARISONS
 
     # ------------------------------------------------------------------
     # Save All Outputs
