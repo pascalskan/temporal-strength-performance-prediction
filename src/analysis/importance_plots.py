@@ -97,7 +97,7 @@ def save_feature_importance_plot(
     plt.close()
 
     logger.info(
-        f"✅ {model_name} importance saved"
+        f"{model_name} importance saved"
     )
 
     return df

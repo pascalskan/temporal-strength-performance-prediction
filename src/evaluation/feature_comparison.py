@@ -43,7 +43,7 @@ def feature_set_comparison(df, feature_cols, save_dir):
     # SAFETY CHECK
     # -------------------------
     if len(X_train_b) < 50 or len(X_test_b) < 50:
-        logger.warning("⚠️ Not enough data for feature comparison")
+        logger.warning("Not enough data for feature comparison")
 
         results = pd.DataFrame([{
             "Feature_Set": "Skipped",
@@ -77,8 +77,8 @@ def feature_set_comparison(df, feature_cols, save_dir):
     metrics_b = compute_basic_metrics(y_test, y_pred_basic)
     metrics_e = compute_basic_metrics(y_test, y_pred_eng)
 
-    logger.info("Basic Features → R2=%.3f", metrics_b.r2)
-    logger.info("Engineered Features → R2=%.3f", metrics_e.r2)
+    logger.info("Basic Features -> R2=%.3f", metrics_b.r2)
+    logger.info("Engineered Features -> R2=%.3f", metrics_e.r2)
 
     # -------------------------
     # SAVE RESULTS
@@ -92,7 +92,7 @@ def feature_set_comparison(df, feature_cols, save_dir):
     save_path = save_dir / "feature_set_comparison.csv"
     results.to_csv(save_path, index=False)
 
-    logger.info("✅ Saved feature comparison to %s", save_path)
+    logger.info("Saved feature comparison to %s", save_path)
 
     plt.figure()
     bars = plt.bar(results["Feature_Set"], results["R2"])
@@ -117,6 +117,6 @@ def feature_set_comparison(df, feature_cols, save_dir):
     plt.savefig(plot_path)
     plt.close()
 
-    logger.info("✅ Saved feature comparison plot to %s", plot_path)
+    logger.info("Saved feature comparison plot to %s", plot_path)
 
     return results

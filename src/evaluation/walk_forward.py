@@ -229,12 +229,12 @@ class WalkForwardEvaluator:
             if full_path.exists():
                 try:
                     df = pd.read_csv(full_path)
-                    logger.info("✅ Found %s (%s): %d rows", file_path, description, len(df))
+                    logger.info("Found %s (%s): %d rows", file_path, description, len(df))
                 except Exception as e:
-                    logger.error("❌ Found %s but failed to read: %s", file_path, e)
+                    logger.error("Found %s but failed to read: %s", file_path, e)
                     missing_files.append(file_path)
             else:
-                logger.error("❌ Missing expected output: %s (%s)", file_path, description)
+                logger.error("Missing expected output: %s (%s)", file_path, description)
                 missing_files.append(file_path)
                 
         if missing_files:
@@ -242,4 +242,4 @@ class WalkForwardEvaluator:
                 f"Walk-forward evaluation failed to generate {len(missing_files)} expected outputs: {missing_files}"
             )
             
-        logger.info("🎉 All expected walk-forward outputs successfully validated.")
+        logger.info("All expected walk-forward outputs successfully validated.")

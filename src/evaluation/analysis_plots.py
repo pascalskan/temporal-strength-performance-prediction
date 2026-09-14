@@ -33,7 +33,7 @@ def load_retro_metrics(group):
 
     df["Type"] = "Retrospective"
 
-    logger.info("✅ Loaded retrospective metrics from %s", path)
+    logger.info("Loaded retrospective metrics from %s", path)
 
     return df
 
@@ -54,7 +54,7 @@ def plot_residuals(group):
     for model_name, col in models.items():
 
         if col not in df.columns:
-            logger.warning("⚠️ %s predictions not found, skipping", model_name)
+            logger.warning("%s predictions not found, skipping", model_name)
             continue
 
         residuals = df["Actual"] - df[col]
@@ -72,7 +72,7 @@ def plot_residuals(group):
         plt.savefig(save_path)
         plt.clf()
 
-        logger.info("✅ Saved residual plot → %s", save_path)
+        logger.info("Saved residual plot -> %s", save_path)
 
 
 def compare_forward_vs_retro(group):
@@ -120,7 +120,7 @@ def compare_forward_vs_retro(group):
         r_row = retro[retro["Model"] == model]
 
         if f_row.empty or r_row.empty:
-            logger.warning("%s | %s: ⚠️ Skipped", group.upper(), model)
+            logger.warning("%s | %s: Skipped", group.upper(), model)
             continue
 
         f_r2 = f_row["R2"].values[0]
@@ -136,7 +136,7 @@ def compare_forward_vs_retro(group):
         rmse_pct = ((f_rmse - r_rmse) / (r_rmse + 1e-6)) * 100
 
         logger.info(
-            "%s: ΔR²=%.3f, MAE %+.1f%%, RMSE %+.1f%%",
+            "%s: DeltaR²=%.3f, MAE %+.1f%%, RMSE %+.1f%%",
             model,
             r2_diff,
             mae_pct,
@@ -154,7 +154,7 @@ def compare_forward_vs_retro(group):
     df_results = pd.DataFrame(results)
 
     if df_results.empty:
-        logger.warning("⚠️ No valid models to compare.")
+        logger.warning("No valid models to compare.")
         return
 
     save_dir = ProjectPaths.comparison_plots_dir(group)
@@ -162,7 +162,7 @@ def compare_forward_vs_retro(group):
     table_path = save_dir / "performance_drop.csv"
     df_results.to_csv(table_path, index=False)
 
-    logger.info("✅ Saved performance drop table to %s", table_path)
+    logger.info("Saved performance drop table to %s", table_path)
 
     plt.figure()
 
@@ -175,7 +175,7 @@ def compare_forward_vs_retro(group):
 
     plt.title(f"{group.upper()} – Performance Drop (Forward vs Retrospective)")
     plt.xlabel("Model")
-    plt.ylabel("ΔR² (Forward − Retrospective)")
+    plt.ylabel("DeltaR² (Forward - Retrospective)")
     plt.xticks(rotation=30)
 
     plot_path = save_dir / "performance_drop.png"
@@ -183,7 +183,7 @@ def compare_forward_vs_retro(group):
     plt.savefig(plot_path)
     plt.clf()
 
-    logger.info("✅ Saved performance drop plot to %s", plot_path)
+    logger.info("Saved performance drop plot to %s", plot_path)
 
     plt.figure()
 
@@ -201,7 +201,7 @@ def compare_forward_vs_retro(group):
     plt.savefig(plot_path)
     plt.clf()
 
-    logger.info("✅ Saved MAE increase plot to %s", plot_path)
+    logger.info("Saved MAE increase plot to %s", plot_path)
 
     plt.figure()
 
@@ -219,7 +219,7 @@ def compare_forward_vs_retro(group):
     plt.savefig(plot_path)
     plt.clf()
 
-    logger.info("✅ Saved RMSE increase plot to %s", plot_path)
+    logger.info("Saved RMSE increase plot to %s", plot_path)
 
 
 def statistical_tests(group):
@@ -269,7 +269,7 @@ def error_by_strength_level(group):
     save_path = plot_dir / "error_by_strength.csv"
     df_results.to_csv(save_path, index=False)
 
-    logger.info("✅ Saved strength-level error table → %s", save_path)
+    logger.info("Saved strength-level error table -> %s", save_path)
 
     plt.figure()
 
@@ -287,7 +287,7 @@ def error_by_strength_level(group):
     plt.savefig(plot_path)
     plt.clf()
 
-    logger.info("✅ Saved strength-level plot → %s", plot_path)
+    logger.info("Saved strength-level plot -> %s", plot_path)
 
 
 def plot_metric_comparison(group, metric):
@@ -315,7 +315,7 @@ def plot_metric_comparison(group, metric):
     plt.savefig(save_path)
     plt.clf()
 
-    logger.info("✅ Saved plot to %s", save_path)
+    logger.info("Saved plot to %s", save_path)
 
 
 def main():

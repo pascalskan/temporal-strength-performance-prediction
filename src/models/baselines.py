@@ -7,7 +7,7 @@ logger = get_logger(__name__)
 
 def run_naive_baseline(df_model_no_attempts, yb_test, split_idx):
 
-    logger.info("🔹 Running Naive Baseline (Prev_Total)...")
+    logger.info("Running Naive Baseline (Prev_Total)...")
 
     test_df = df_model_no_attempts[
         df_model_no_attempts["Date"] > split_idx

@@ -3,7 +3,7 @@ import numpy as np
 from tqdm import tqdm
 
 # -------------------------------
-# RPE → Estimated Reps Mapping
+# RPE -> Estimated Reps Mapping
 # -------------------------------
 def rpe_to_reps(rpe):
     """
@@ -58,11 +58,11 @@ def estimate_1rm_from_attempts(a1, a2, a3):
         epley_estimates.append(epley(weight, reps))
         brzycki_estimates.append(brzycki(weight, reps))
 
-    # 🚨 FIX: fallback if no attempts available
+    # FIX: fallback if no attempts available
     if len(epley_estimates) == 0:
         return np.nan, np.nan
 
-    # 🚨 FIX: use max instead of mean when few values
+    # FIX: use max instead of mean when few values
     if len(epley_estimates) == 1:
         return epley_estimates[0], brzycki_estimates[0]
 
@@ -110,7 +110,7 @@ def predict_traditional(df):
         total_epley = squat_epley + bench_epley + deadlift_epley
         total_brzycki = squat_brzycki + bench_brzycki + deadlift_brzycki
 
-        # 🚨 FIX: skip invalid rows
+        # FIX: skip invalid rows
         if np.isnan(total_epley) or np.isnan(total_brzycki):
             continue
 

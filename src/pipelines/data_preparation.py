@@ -30,12 +30,12 @@ def prepare_modelling_data(df):
     - scale required feature sets
     """
 
-    logger.info("🔹 Applying feature engineering...")
+    logger.info("Applying feature engineering...")
     df = df.copy()
     df["Athlete_ID"] = build_athlete_id(df)
     df = feature_engineering(df, athlete_col="Athlete_ID")
 
-    logger.info("🔹 Cleaning dataset for modelling (removing insufficient history rows)...")
+    logger.info("Cleaning dataset for modelling (removing insufficient history rows)...")
 
     df_model = df.dropna(
         subset=[
@@ -58,9 +58,9 @@ def prepare_modelling_data(df):
         errors="ignore"
     )
 
-    logger.info("✅ Remaining samples after cleaning: %s", len(df_model))
+    logger.info("Remaining samples after cleaning: %s", len(df_model))
 
-    logger.info("🔹 Final feature cleaning (handling remaining NaNs)...")
+    logger.info("Final feature cleaning (handling remaining NaNs)...")
 
     # Clean the features directly in the dataframe before splitting
     for feature in ENGINEERED_FEATURES:
@@ -71,10 +71,10 @@ def prepare_modelling_data(df):
     X = df_model_no_attempts[ENGINEERED_FEATURES]
     y = df_model["TotalKg"]
 
-    logger.info("✅ Final feature cleaning complete")
-    logger.info("✅ Features ready: %s features", len(ENGINEERED_FEATURES))
+    logger.info("Final feature cleaning complete")
+    logger.info("Features ready: %s features", len(ENGINEERED_FEATURES))
 
-    logger.info("🔹 Using time-aware split (past → future)...")
+    logger.info("Using time-aware split (past -> future)...")
 
     X_train, X_test, y_train, y_test, split_idx = time_aware_split(
         df_model_no_attempts,
@@ -90,7 +90,7 @@ def prepare_modelling_data(df):
     ]["Date"]
 
     assert train_dates.max() <= test_dates.min(), \
-        "❌ Time leakage: train/test overlap"
+        "Time leakage: train/test overlap"
 
     Xb_train, Xb_test, yb_train, yb_test, _ = time_aware_split(
         df_model_no_attempts,
@@ -110,7 +110,7 @@ def prepare_modelling_data(df):
     logger.info("Train size: %s", len(X_train))
     logger.info("Test size: %s", len(X_test))
 
-    logger.info("📅 Date ranges:")
+    logger.info("Date ranges:")
 
     train_df = df_model_no_attempts[
         df_model_no_attempts["Date"] <= split_idx
@@ -120,8 +120,8 @@ def prepare_modelling_data(df):
         df_model_no_attempts["Date"] > split_idx
     ]
 
-    logger.info("Train: %s → %s", train_df["Date"].min(), train_df["Date"].max())
-    logger.info("Test:  %s → %s", test_df["Date"].min(), test_df["Date"].max())
+    logger.info("Train: %s -> %s", train_df["Date"].min(), train_df["Date"].max())
+    logger.info("Test:  %s -> %s", test_df["Date"].min(), test_df["Date"].max())
 
     return PreparedData(
         df=df,

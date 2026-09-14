@@ -26,16 +26,16 @@ def feature_engineering(df, athlete_col):
         )
 
     logger.info(
-        f"🔹 Starting feature engineering using athlete identifier: {athlete_col}..."
+        f"Starting feature engineering using athlete identifier: {athlete_col}..."
     )
 
     df = df.sort_values([athlete_col, "Date"]).copy()
 
     assert df.groupby(athlete_col)["Date"].is_monotonic_increasing.all(), (
-        f"❌ Data leakage risk: Dates are not strictly increasing per {athlete_col}"
+        f"Data leakage risk: Dates are not strictly increasing per {athlete_col}"
     )
 
-    logger.info("🔸 Creating historical features...")
+    logger.info("Creating historical features...")
 
     # Add Prev_Prev_Total for Drift Baseline
     df["Prev_Prev_Total"] = df.groupby(athlete_col)["TotalKg"].shift(2)
@@ -57,7 +57,7 @@ def feature_engineering(df, athlete_col):
 
     df["Peak_Distance"] = df["Prev_Total"] - df["PB"]
 
-    logger.info("🔸 Creating progression features...")
+    logger.info("Creating progression features...")
 
     df["Improvement"] = (
         df.groupby(athlete_col)["TotalKg"].shift(1)
@@ -70,11 +70,11 @@ def feature_engineering(df, athlete_col):
         + 0.1 * df.groupby(athlete_col)["TotalKg"].shift(3)
     )
 
-    logger.info("🔸 Creating consistency features...")
+    logger.info("Creating consistency features...")
 
     df["CV"] = df["Rolling_Std_3"] / (df["Rolling_Mean_3"] + 1e-6)
 
-    logger.info("🔸 Creating experience features...")
+    logger.info("Creating experience features...")
 
     first_date = df.groupby(athlete_col)["Date"].transform("min")
 
@@ -84,11 +84,11 @@ def feature_engineering(df, athlete_col):
         df["Comp_Count"] / (df["Career_Length_Days"] + 1)
     )
 
-    logger.info("🔸 Creating age features...")
+    logger.info("Creating age features...")
 
     df["Age_Squared"] = df["Age"] ** 2
 
-    logger.info("🔸 Creating attempt behaviour features...")
+    logger.info("Creating attempt behaviour features...")
 
     df["Success_Rate"] = df[ATTEMPT_COLUMNS].notna().sum(axis=1) / 9
 
@@ -105,6 +105,6 @@ def feature_engineering(df, athlete_col):
 
     df["Risk"] = df["Aggression"] * (1 - df["Success_Rate"])
 
-    logger.info("✅ Feature engineering complete.")
+    logger.info("Feature engineering complete.")
 
     return df
