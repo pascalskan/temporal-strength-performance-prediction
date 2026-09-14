@@ -18,6 +18,7 @@ class ProjectPaths:
     """
 
     _dataset_scope = None
+    _dataset_digest = None
 
     @staticmethod
     def project_root() -> Path:
@@ -39,9 +40,19 @@ class ProjectPaths:
         return cls._dataset_scope
 
     @classmethod
+    def set_dataset_digest(cls, digest: str) -> None:
+        """Record the content digest of the input, for run metadata."""
+        cls._dataset_digest = digest
+
+    @classmethod
+    def dataset_digest(cls):
+        return cls._dataset_digest
+
+    @classmethod
     def clear_dataset_scope(cls) -> None:
-        """Reset the scope. Intended for tests."""
+        """Reset the scope and digest. Intended for tests."""
         cls._dataset_scope = None
+        cls._dataset_digest = None
 
     @classmethod
     def use_dataset(cls, filename: str) -> Path:

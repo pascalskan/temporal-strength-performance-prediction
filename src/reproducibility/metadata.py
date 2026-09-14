@@ -20,6 +20,10 @@ class ExperimentMetadata:
     # recording only the cohort is what previously allowed fixture output to be
     # stamped as production output.
     dataset_source: str
+    # Content digest of the input file. OpenPowerlifting revises historical
+    # records, so the filename alone does not identify which data produced a
+    # result; the digest does.
+    dataset_sha256: Optional[str]
     cohort: str
     dataset_rows: int
     dataset_columns: int

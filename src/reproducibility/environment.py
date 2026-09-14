@@ -59,6 +59,7 @@ def capture_experiment_metadata(
         git_commit=get_git_commit(),
         random_seed=random_seed,
         dataset_source=ProjectPaths.dataset_scope(),
+        dataset_sha256=ProjectPaths.dataset_digest(),
         cohort=cohort,
         dataset_rows=len(df),
         dataset_columns=len(df.columns),

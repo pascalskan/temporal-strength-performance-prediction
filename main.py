@@ -3,6 +3,13 @@ import argparse
 from src.core.logging import get_logger
 from src.data.cleaning import clean_data, split_equipment_cohorts
 from src.data.loader import load_data
+from src.data.provenance import (
+    MANIFEST_FILENAME,
+    build_manifest,
+    compare_to_manifest,
+    load_manifest,
+    report_comparison,
+)
 from src.io.paths import ProjectPaths
 from src.pipelines.forward_pipeline import run_forward_pipeline
 from src.pipelines.retrospective_pipeline import run_pipeline
@@ -70,6 +77,17 @@ def main():
     logger.info("Loading dataset from: %s", dataset_path)
 
     df = load_data(dataset_path)
+
+    # Fingerprint the input before touching it. OpenPowerlifting is a living
+    # database, so a filename does not identify a snapshot; results are only
+    # reproducible against the data that produced them.
+    manifest = build_manifest(dataset_path, df)
+    ProjectPaths.set_dataset_digest(manifest["sha256"])
+    manifest_path = ProjectPaths.data_dir() / MANIFEST_FILENAME
+    report_comparison(
+        compare_to_manifest(manifest, load_manifest(manifest_path)),
+        manifest_path,
+    )
 
     logger.info("Cleaning data...")
     df = clean_data(df)
