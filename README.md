@@ -298,13 +298,63 @@ Full experimental reproducibility depends on access to the same source dataset a
 
 ## Key Findings
 
-Core findings from the research:
+Figures are from the Raw cohort (601,835 records, 101,695 forward predictions)
+on the dataset snapshot recorded in `data/dataset_manifest.json`.
 
-- **Retrospective leakage artificially inflates ML performance:** When evaluated using randomized splits, ML models show extraordinary accuracy due to implicit structural leakage.
-- **Temporal baselines are highly competitive:** Under strict walk-forward evaluation, simple baselines like Rolling Mean and Persistence perform remarkably well, challenging the presumed necessity of complex ML for athlete forecasting.
-- **Evaluation methodology determines the outcome:** The comparative ranking of models shifts dramatically when transitioning from retrospective to temporally consistent evaluation frameworks.
+**Evaluation protocol, not model choice, dominates measured performance.**
+Identical models and features, untuned in both arms, protocol the only
+difference:
 
-This demonstrates that evaluation design is fundamentally more impactful than model selection in applied predictive modelling.
+| Model | Retrospective R² | Walk-forward R² | Retrospective MAE | Walk-forward MAE |
+|---|---|---|---|---|
+| Linear Regression | 0.955 | 0.342 | 22.51 | 105.89 |
+| Random Forest | 0.970 | 0.555 | 17.82 | 106.85 |
+| Gradient Boosting | 0.965 | 0.570 | 19.45 | 103.37 |
+
+Error inflates five- to six-fold. The effect reproduces in the Equipped cohort
+(R² 0.890–0.926 falling to 0.459–0.474).
+
+Note what does *not* cause this. Both arms use chronological splits; the only
+difference is whether the target is the same competition or the next one. The
+collapse is therefore attributable to target coupling alone, rather than to
+randomised splitting.
+
+**Information beats architecture by roughly ten to one.** Feature ablation under
+the same walk-forward protocol, best learned model at each step:
+
+| Feature set | Features | Best MAE | Gain from added information | Spread across algorithms |
+|---|---|---|---|---|
+| Demographics only | 3 | 139.05 | — | 9.73 |
+| + previous total | 4 | 108.27 | 30.78 | 5.35 |
+| + recent form | 7 | 104.04 | 35.01 | 3.09 |
+| Full engineered set | 17 | 103.37 | 35.69 | 3.49 |
+
+A single feature accounts for 86% of the total information gain; the remaining
+thirteen contribute 4.91 kg between them. The spread across algorithms narrows
+as information improves, so model choice matters least exactly where the data is
+richest.
+
+**No learned model beat the simple temporal baselines.** With the full
+engineered feature set, the best learned model remains 1.51 kg behind the better
+of Persistence (MAE 101.85) and Rolling Mean (102.15).
+
+**Which metric is reported changes the ranking.** Baselines win on MAE while
+Gradient Boosting wins on RMSE and R². Persistence has by far the lowest median
+error (22.5 kg against 65.9 for Gradient Boosting) and much heavier tails, which
+RMSE penalises quadratically and MAE does not. "Do simple baselines match
+machine learning?" has no answer independent of the loss function.
+
+**Comparisons against traditional equations must be made on shared data.** Epley
+and Brzycki require recorded attempts, available for 59.1% of Raw predictions,
+and that subpopulation is systematically easier. On the full population Brzycki
+appears to beat Gradient Boosting by 11.7 kg; restricted to observations every
+model scored, the gap is 2.1 kg and Persistence overtakes Brzycki. See
+`matched_subset/` in any walk-forward output directory.
+
+**Feature attribution is less concentrated than retrospective analysis
+suggested.** Under walk-forward the rolling mean accounts for 46.9% of Gradient
+Boosting's attribution and 37.1% of Random Forest's — not the 80–90% measured
+retrospectively — and six to ten features are needed to reach 80%.
 
 ---
 
