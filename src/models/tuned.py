@@ -66,13 +66,18 @@ class PeriodicallyTunedRegressor(BaseEstimator, RegressorMixin):
                  retune_every: int = DEFAULT_RETUNE_EVERY,
                  inner_splits: int = INNER_SPLITS,
                  scoring: str = "neg_mean_absolute_error",
-                 name: str = "estimator"):
+                 name: str = "estimator",
+                 search_jobs: int = 1):
         self.estimator = estimator
         self.param_grid = param_grid
         self.retune_every = retune_every
         self.inner_splits = inner_splits
         self.scoring = scoring
         self.name = name
+        # Workers for the grid search itself. Defaults to sequential; see the
+        # note in _search on why parallelising here is unsafe for estimators
+        # that already parallelise internally.
+        self.search_jobs = search_jobs
 
         self._fit_count = 0
         self._best_params: Dict[str, Any] = {}
@@ -106,7 +111,15 @@ class PeriodicallyTunedRegressor(BaseEstimator, RegressorMixin):
             self.param_grid,
             cv=TimeSeriesSplit(n_splits=n_splits),
             scoring=self.scoring,
-            n_jobs=-1,
+            # Deliberately sequential over the grid. The estimators carry their
+            # own n_jobs, so a parallel search nests parallelism: each of up to
+            # 16 workers would fit a complete 200-tree forest, unbounded in
+            # depth, on a training window reaching 400,000 rows. One such forest
+            # measured around 3GB; six at once exceeds the machine, and the run
+            # would die hours in with nothing recoverable beyond the last
+            # checkpoint. Running the grid sequentially keeps one model in
+            # memory at a time while the estimator still uses every core.
+            n_jobs=self.search_jobs,
         )
         search.fit(X, y)
 
@@ -160,6 +173,22 @@ class PeriodicallyTunedRegressor(BaseEstimator, RegressorMixin):
     @property
     def coef_(self):
         return getattr(self.fitted_estimator_, "coef_")
+
+    @property
+    def named_steps(self):
+        """
+        Forward the wrapped pipeline's steps.
+
+        The evaluator unwraps a Pipeline to find the estimator carrying the
+        attribution. Without this the wrapper hides that structure, so a tuned
+        Pipeline model -- Ridge, here -- would silently contribute no feature
+        attribution at all while every other model did, with nothing in the
+        output to show a column had gone missing.
+        """
+        steps = getattr(self.fitted_estimator_, "named_steps", None)
+        if steps is None:
+            raise AttributeError("wrapped estimator is not a Pipeline")
+        return steps
 
     @property
     def best_params_(self) -> Dict[str, Any]:

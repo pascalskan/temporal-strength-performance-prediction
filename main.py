@@ -1,4 +1,6 @@
 import argparse
+import sys
+import time
 
 from src.core.logging import get_logger
 from src.data.cleaning import clean_data, split_equipment_cohorts
@@ -126,6 +128,14 @@ def main():
         ", ".join(args.cohorts),
     )
 
+    # Each (stage, cohort) is isolated. A full suite runs unattended for many
+    # hours, and the units are independent: letting one failure abort the rest
+    # would discard hours of work that had nothing to do with it. Failures are
+    # recorded with their traceback, reported together at the end, and turned
+    # into a non-zero exit so a crash can never be mistaken for a clean run.
+    failures = []
+    completed = 0
+
     for stage_name in args.stages:
         run_stage = STAGES[stage_name]
         logger.info("=== Stage: %s ===", stage_name)
@@ -140,10 +150,39 @@ def main():
                 continue
 
             logger.info("Running %s for cohort '%s'...", stage_name, cohort_name)
-            run_stage(cohort_df, cohort_name)
+            started = time.time()
 
-    logger.info("All requested pipelines complete.")
+            try:
+                run_stage(cohort_df, cohort_name)
+            except Exception:
+                logger.exception(
+                    "FAILED: %s / %s after %.1f min. Continuing with the "
+                    "remaining work; this run will exit non-zero.",
+                    stage_name, cohort_name, (time.time() - started) / 60,
+                )
+                failures.append((stage_name, cohort_name))
+            else:
+                completed += 1
+                logger.info(
+                    "Completed %s / %s in %.1f min",
+                    stage_name, cohort_name, (time.time() - started) / 60,
+                )
+
+    if failures:
+        logger.error(
+            "%d of %d units failed: %s",
+            len(failures), len(failures) + completed,
+            ", ".join(f"{stage}/{cohort}" for stage, cohort in failures),
+        )
+        logger.error(
+            "Completed work is on disk and checkpointed; rerun only the failed "
+            "units with --stages and --cohorts."
+        )
+        return 1
+
+    logger.info("All requested pipelines complete (%d units).", completed)
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

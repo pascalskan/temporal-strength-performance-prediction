@@ -99,3 +99,58 @@ def test_empty_cohort_is_skipped_not_fatal(monkeypatch):
 
     # Only raw has records; equipped is skipped without raising.
     assert calls == [("raw", 1)]
+
+
+def test_one_failing_unit_does_not_abort_the_rest(monkeypatch, capsys):
+    """
+    A full suite runs unattended for hours over independent units. A failure in
+    one must not discard the others' work -- that would be the difference
+    between losing twenty minutes and losing a night.
+    """
+    calls = []
+
+    frame = pd.DataFrame({
+        "Equipment": ["Raw", "Single-ply"],
+        "TotalKg": [400.0, 500.0],
+        "Age": [25.0, 30.0],
+        "BodyweightKg": [80.0, 100.0],
+        "Sex": ["M", "F"],
+        "Name": ["A", "B"],
+    })
+    monkeypatch.setattr(main_module, "load_data", lambda path: frame)
+    monkeypatch.setattr(main_module, "clean_data", lambda df: df)
+
+    def failing(df, cohort):
+        calls.append(("failing", cohort))
+        raise RuntimeError("simulated stage failure")
+
+    def working(df, cohort):
+        calls.append(("working", cohort))
+
+    monkeypatch.setattr(main_module, "STAGES",
+                        {"failing": failing, "working": working})
+
+    monkeypatch.setattr("sys.argv",
+                        ["main.py", "--test", "--stages", "failing", "working"])
+    exit_code = main_module.main()
+
+    # Both cohorts of both stages were attempted despite the first failing.
+    assert ("working", "raw") in calls
+    assert ("working", "equipped") in calls
+    assert len([c for c in calls if c[0] == "failing"]) == 2
+
+    # And the run reports failure rather than looking clean.
+    assert exit_code == 1
+
+
+def test_a_clean_run_exits_zero(monkeypatch):
+    frame = pd.DataFrame({
+        "Equipment": ["Raw"], "TotalKg": [400.0], "Age": [25.0],
+        "BodyweightKg": [80.0], "Sex": ["M"], "Name": ["A"],
+    })
+    monkeypatch.setattr(main_module, "load_data", lambda path: frame)
+    monkeypatch.setattr(main_module, "clean_data", lambda df: df)
+    monkeypatch.setattr(main_module, "STAGES", {"ok": lambda df, cohort: None})
+    monkeypatch.setattr("sys.argv", ["main.py", "--test", "--stages", "ok"])
+
+    assert main_module.main() == 0
