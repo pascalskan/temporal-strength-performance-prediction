@@ -139,6 +139,25 @@ RIDGE_GRID = {
 # per-fold.
 RETUNE_EVERY_N_FOLDS = 5
 
+# Workers for the grid search, set per model according to what the model costs
+# to hold in memory rather than uniformly.
+#
+# Random Forest parallelises internally and its candidates are large -- 200
+# trees, unbounded depth under one grid point, on a window of ~173,000 rows.
+# Fitting several at once is what exhausts memory, so its grid runs
+# sequentially and the forest itself uses every core.
+#
+# Gradient Boosting is the opposite: single-threaded, and its trees are capped
+# at depth 4, so a candidate is small. Measured on the largest training window,
+# one sequential search took 25.3 minutes against Random Forest's 14.0 -- it
+# was the bottleneck purely for want of parallelism. Its grid is therefore
+# parallel; sixteen concurrent candidates need well under a gigabyte.
+SEARCH_JOBS = {
+    "Random Forest": 1,
+    "Gradient Boosting": -1,
+    "Ridge": -1,
+}
+
 
 def build_tuned_models() -> Dict[str, Any]:
     """
@@ -160,18 +179,21 @@ def build_tuned_models() -> Dict[str, Any]:
             ]),
             param_grid=RIDGE_GRID,
             retune_every=RETUNE_EVERY_N_FOLDS,
+            search_jobs=SEARCH_JOBS["Ridge"],
             name="Ridge",
         ),
         "Random Forest": PeriodicallyTunedRegressor(
             estimator=RandomForestRegressor(**RANDOM_FOREST_PARAMS),
             param_grid=RANDOM_FOREST_GRID,
             retune_every=RETUNE_EVERY_N_FOLDS,
+            search_jobs=SEARCH_JOBS["Random Forest"],
             name="Random Forest",
         ),
         "Gradient Boosting": PeriodicallyTunedRegressor(
             estimator=GradientBoostingRegressor(**GRADIENT_BOOSTING_PARAMS),
             param_grid=GRADIENT_BOOSTING_GRID,
             retune_every=RETUNE_EVERY_N_FOLDS,
+            search_jobs=SEARCH_JOBS["Gradient Boosting"],
             name="Gradient Boosting",
         ),
     }
